@@ -98,27 +98,28 @@
     add(text, "me");
     if (window.twinCaptureName) window.twinCaptureName(text, state);
     history.push({ role: "user", content: text });
-    var used = false;
-    var timer = setTimeout(function () {
-      if (used) return;
-      used = true;
-      var fallback = window.twinReply(p, text, state);
-      history.push({ role: "assistant", content: fallback });
-      add(fallback, "them");
-    }, 4000);
+    var typing = document.createElement("div");
+    typing.className = "row them";
+    typing.id = "typing";
+    typing.innerHTML = "<div class='bubble'>\u2026</div>";
+    thread.appendChild(typing);
+    thread.scrollTop = thread.scrollHeight;
+    function finish(reply) {
+      var el = document.getElementById("typing");
+      if (el) el.remove();
+      history.push({ role: "assistant", content: reply });
+      add(reply, "them");
+    }
     fetch(API, {
       method: "POST",
       headers: { "content-type": "application/json" },
       body: JSON.stringify({ personaId: p.id, message: text, guestName: state.guestName || "", history: history.slice(-12) })
     }).then(function (r) { return r.json(); }).then(function (j) {
-      if (used) return;
-      if (j && j.reply) {
-        used = true;
-        clearTimeout(timer);
-        history.push({ role: "assistant", content: j.reply });
-        add(j.reply, "them");
-      }
-    }).catch(function () {});
+      if (j && j.reply) finish(j.reply);
+      else finish(window.twinReply(p, text, state));
+    }).catch(function () {
+      finish(window.twinReply(p, text, state));
+    });
   }
   document.getElementById("form").onsubmit = function (e) {
     e.preventDefault();
