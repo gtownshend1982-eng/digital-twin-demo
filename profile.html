@@ -9,7 +9,7 @@
 <style>
 .page { max-width: 980px; margin: 0 auto; padding: 24px 16px 40px; position: relative; z-index: 1; }
 .top { display:flex; gap:22px; align-items:flex-start; flex-wrap:wrap; margin-bottom:22px; }
-.top img { width:min(280px,100%); aspect-ratio:3/4; object-fit:cover; border-radius:16px; border:1px solid var(--line); }
+.top img { width:min(280px,100%); aspect-ratio:3/4; object-fit:cover; border-radius:4px; border:1px solid var(--line); box-shadow:0 12px 40px rgba(0,0,0,.45); }
 .bio h1 { font-family:"Cormorant Garamond",serif; font-size:2.4rem; }
 .bio .sub { color:var(--gold); letter-spacing:.08em; text-transform:uppercase; font-size:.75rem; margin:6px 0 12px; }
 .bio p { color:#e5e7eb; line-height:1.55; max-width:36rem; }
@@ -39,6 +39,11 @@
     <div class="bio">
       <h1 id="name"></h1>
       <div class="sub" id="sub"></div>
+      <div class="badges" style="position:static;margin:8px 0 12px">
+        <span class="chip">Verified</span>
+        <span class="chip on">Available</span>
+        <span class="chip" id="minchip">1 hour min</span>
+      </div>
       <p id="about"></p>
       <div class="facts" id="facts"></div>
     </div>
@@ -59,8 +64,8 @@
     <button type="button" id="booknow" class="book-now">Book me now</button>
   </div>
 </div>
-<script src="profiles.js"></script>
-<script src="chat-engine.js"></script>
+<script src="profiles.js?v=20260904b"></script>
+<script src="chat-engine.js?v=20260904b"></script>
 <script>
 (function () {
   var id = (new URLSearchParams(location.search).get("id") || "").toLowerCase();
@@ -71,14 +76,16 @@
   }
   document.title = p.name + " — Capital Companions";
   document.getElementById("back").href = p.wing === "female" ? "female.html" : p.wing === "male" ? "male.html" : "trans.html";
-  document.getElementById("photo").src = p.photo;
+  document.getElementById("photo").src = p.photo + "?v=2";
   document.getElementById("photo").alt = p.name;
-  document.getElementById("ava").src = p.photo;
+  document.getElementById("ava").src = p.photo + "?v=2";
   document.getElementById("name").textContent = p.name;
   document.getElementById("waname").textContent = p.name;
   document.getElementById("sub").textContent = (p.brief || "") + " · " + p.age;
   document.getElementById("about").textContent = p.about || "";
-  document.getElementById("facts").textContent = [p.height, p.body, p.nationality, p.city].filter(Boolean).join(" · ");
+  var mc=document.getElementById("minchip");
+  if(mc) mc.textContent = (p.minDuration || "1 hour") + " min";
+  document.getElementById("facts").textContent = [p.city].filter(Boolean).join(" · ");
   var thread = document.getElementById("thread");
   var state = { turns: 0, guestName: "" };
   var history = [];
