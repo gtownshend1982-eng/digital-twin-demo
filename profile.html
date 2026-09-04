@@ -4,90 +4,80 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Profile</title>
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600&family=Plus+Jakarta+Sans:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css.css">
 <style>
-.page { max-width: 980px; margin: 0 auto; padding: 24px 16px 40px; position: relative; z-index: 1; }
-.top { display:flex; gap:22px; align-items:flex-start; flex-wrap:wrap; margin-bottom:22px; }
-.top img { width:min(280px,100%); aspect-ratio:3/4; object-fit:cover; border-radius:4px; border:1px solid var(--line); box-shadow:0 12px 40px rgba(0,0,0,.45); }
-.bio h1 { font-family:"Cormorant Garamond",serif; font-size:2.4rem; }
-.bio .sub { color:var(--gold); letter-spacing:.08em; text-transform:uppercase; font-size:.75rem; margin:6px 0 12px; }
-.bio p { color:#e5e7eb; line-height:1.55; max-width:36rem; }
-.facts { margin-top:14px; color:var(--muted); font-size:.9rem; line-height:1.6; }
-.wa { max-width: 520px; margin: 8px 0 0; background:#0b141a; border:1px solid var(--line); border-radius:16px; overflow:hidden; display:flex; flex-direction:column; min-height:520px; }
-.wa-head { background:#202c33; display:flex; align-items:center; gap:10px; padding:10px 12px; }
+.page { max-width: 980px; margin: 0 auto; padding: 24px 16px 40px; }
+.top { display:flex; gap:22px; flex-wrap:wrap; margin-bottom:22px; }
+.top img { width:min(280px,100%); aspect-ratio:3/4; object-fit:cover; border-radius:4px; }
+.wa { max-width: 520px; background:#0b141a; border-radius:16px; overflow:hidden; display:flex; flex-direction:column; min-height:520px; }
+.wa-head { background:#202c33; display:flex; align-items:center; gap:10px; padding:10px 12px; color:#fff; }
 .wa-head img { width:40px; height:40px; border-radius:50%; object-fit:cover; }
-.wa-head .nm { font-weight:600; font-size:.95rem; }
-.wa-head .st { font-size:.72rem; color:#8696a0; }
-.wa-thread { flex:1; padding:14px 12px 8px; overflow-y:auto; max-height:360px; background:#0b141a; }
+.wa-thread { flex:1; padding:14px 12px; overflow-y:auto; max-height:360px; }
 .row { display:flex; margin:6px 0; }
 .row.me { justify-content:flex-end; }
-.bubble { max-width:78%; padding:8px 10px; border-radius:10px; font-size:.9rem; line-height:1.4; white-space:pre-wrap; }
-.row.them .bubble { background:#202c33; color:#e9edef; border-top-left-radius:3px; }
-.row.me .bubble { background:#005c4b; color:#e9edef; border-top-right-radius:3px; }
+.bubble { max-width:78%; padding:8px 10px; border-radius:10px; color:#e9edef; white-space:pre-wrap; }
+.row.them .bubble { background:#202c33; }
+.row.me .bubble { background:#005c4b; }
 .wa-form { display:flex; gap:8px; padding:10px; background:#202c33; }
-.wa-form input { flex:1; border:0; border-radius:20px; padding:10px 14px; background:#2a3942; color:#fff; font:inherit; }
-.wa-form button { border:0; border-radius:20px; padding:10px 16px; background:#00a884; color:#042; font-weight:700; cursor:pointer; }
-.book-now { width: calc(100% - 20px); margin: 0 10px 10px; border:0; border-radius:12px; padding:12px 16px; background:#c9a227; color:#111; font-weight:700; cursor:pointer; font:inherit; }
+.wa-form input { flex:1; border:0; border-radius:20px; padding:10px 14px; background:#2a3942; color:#fff; }
+.wa-form button { border:0; border-radius:20px; padding:10px 16px; background:#00a884; font-weight:700; }
+.book-now { margin:0 10px 10px; padding:12px; background:#c9a227; border:0; border-radius:12px; font-weight:700; }
+.err { padding:24px; background:#fee; font-family:sans-serif; }
 </style>
 </head>
 <body>
-<div class="page">
-  <a class="back" id="back" href="index.html">← Back</a>
+<div class="page" id="page">
+  <a id="back" href="index.html">Back</a>
   <div class="top">
     <img id="photo" alt="">
-    <div class="bio">
+    <div>
       <h1 id="name"></h1>
-      <div class="sub" id="sub"></div>
-      <div class="badges" style="position:static;margin:8px 0 12px">
-        <span class="chip">Verified</span>
-        <span class="chip on">Available</span>
-        <span class="chip" id="minchip">1 hour min</span>
-      </div>
+      <div id="sub"></div>
       <p id="about"></p>
-      <div class="facts" id="facts"></div>
+      <div id="facts"></div>
     </div>
   </div>
   <div class="wa">
     <div class="wa-head">
       <img id="ava" alt="">
       <div>
-        <div class="nm" id="waname"></div>
-        <div class="st">online · demo chat</div>
+        <div id="waname"></div>
+        <div style="color:#8696a0;font-size:.75rem">online</div>
       </div>
     </div>
     <div class="wa-thread" id="thread"></div>
     <form class="wa-form" id="form">
-      <input id="msg" autocomplete="off" placeholder="Message…" />
+      <input id="msg" autocomplete="off" placeholder="Message" />
       <button type="submit">Send</button>
     </form>
     <button type="button" id="booknow" class="book-now">Book me now</button>
   </div>
 </div>
-<script src="profiles.js?v=20260904d"></script>
+<script src="profiles.js"></script>
+<script src="examples.js"></script>
 <script src="examples-a.js"></script>
 <script src="examples-b.js"></script>
-<script src="chat-engine.js?v=20260904d"></script>
+<script src="chat-engine.js"></script>
 <script>
 (function () {
-  var id = (new URLSearchParams(location.search).get("id") || "").toLowerCase();
-  var p = (window.PROFILES || {})[id];
-  if (!window.PROFILES || !p) {
-    document.querySelector(".page").innerHTML = "<p style='padding:40px'>Need profiles.js and chat-engine.js next to this file.</p>";
-    return;
+  var page = document.getElementById("page");
+  function fail(msg) {
+    page.innerHTML = "<div class='err'><p><b>Chat cannot start.</b></p><p>" + msg + "</p><p>These files must sit in C:\\Users\\Alexis\\digital-twin-demo next to profile.html:</p><ul><li>profiles.js</li><li>chat-engine.js</li><li>examples-a.js</li><li>examples-b.js</li></ul></div>";
   }
-  document.title = p.name + " — Capital Companions";
+  if (!window.PROFILES) { fail("profiles.js did not load."); return; }
+  var id = (new URLSearchParams(location.search).get("id") || "ben").toLowerCase();
+  var p = window.PROFILES[id];
+  if (!p) { fail("Unknown persona: " + id + ". Use profile.html?id=ben"); return; }
+  if (!window.twinReply) { fail("chat-engine.js did not load."); return; }
+  document.title = p.name;
   document.getElementById("back").href = p.wing === "female" ? "female.html" : p.wing === "male" ? "male.html" : "trans.html";
-  document.getElementById("photo").src = p.photo + "?v=2";
-  document.getElementById("photo").alt = p.name;
-  document.getElementById("ava").src = p.photo + "?v=2";
+  document.getElementById("photo").src = (p.photo || "") + "?v=3";
+  document.getElementById("ava").src = (p.photo || "") + "?v=3";
   document.getElementById("name").textContent = p.name;
   document.getElementById("waname").textContent = p.name;
-  document.getElementById("sub").textContent = (p.brief || "") + " · " + p.age;
+  document.getElementById("sub").textContent = (p.brief || "") + " \u00b7 " + (p.age || "");
   document.getElementById("about").textContent = p.about || "";
-  var mc=document.getElementById("minchip");
-  if(mc) mc.textContent = (p.minDuration || "1 hour") + " min";
-  document.getElementById("facts").textContent = [p.city].filter(Boolean).join(" · ");
+  document.getElementById("facts").textContent = p.city || "";
   var thread = document.getElementById("thread");
   var state = { turns: 0, guestName: "" };
   function add(text, who) {
@@ -101,13 +91,11 @@
     thread.appendChild(row);
     thread.scrollTop = thread.scrollHeight;
   }
-  var opening = window.twinOpening ? window.twinOpening(p) : ("Hi im " + p.name + " who am i talking with");
-  add(opening, "them");
+  add(window.twinOpening ? window.twinOpening(p) : ("Hi im " + p.name + " who am i talking with"), "them");
   function send(text) {
     add(text, "me");
     if (window.twinCaptureName) window.twinCaptureName(text, state);
-    var reply = window.twinReply ? window.twinReply(p, text, state) : "Yeah.";
-    add(reply, "them");
+    add(window.twinReply(p, text, state), "them");
   }
   document.getElementById("form").onsubmit = function (e) {
     e.preventDefault();
@@ -117,7 +105,7 @@
     input.value = "";
     send(text);
   };
-  document.getElementById("booknow").onclick = function () { send("I'd like to book"); };
+  document.getElementById("booknow").onclick = function () { send("ok i'll hit book me now"); };
 })();
 </script>
 </body>
