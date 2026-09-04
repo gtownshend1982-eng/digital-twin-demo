@@ -23,10 +23,7 @@
 .wa-head img { width:40px; height:40px; border-radius:50%; object-fit:cover; }
 .wa-head .nm { font-weight:600; font-size:.95rem; }
 .wa-head .st { font-size:.72rem; color:#8696a0; }
-.wa-thread {
-  flex:1; padding:14px 12px 8px; overflow-y:auto; max-height:360px;
-  background:#0b141a;
-}
+.wa-thread { flex:1; padding:14px 12px 8px; overflow-y:auto; max-height:360px; background:#0b141a; }
 .row { display:flex; margin:6px 0; }
 .row.me { justify-content:flex-end; }
 .bubble { max-width:78%; padding:8px 10px; border-radius:10px; font-size:.9rem; line-height:1.4; white-space:pre-wrap; }
@@ -65,14 +62,18 @@
     </form>
   </div>
 </div>
-<script src="profiles.js?v=5"></script>
-<script src="chat-engine.js?v=5"></script>
+<script src="profiles.js"></script>
+<script src="chat-engine.js"></script>
 <script>
 (function initChat() {
   const id = (new URLSearchParams(location.search).get("id") || "").toLowerCase();
   const p = (window.PROFILES || {})[id];
+  if (!window.PROFILES) {
+    document.querySelector(".page").innerHTML = "<p style='padding:40px;max-width:36rem'>Chat scripts did not load. Put <b>profiles.js</b> and <b>chat-engine.js</b> in the same folder as profile.html, then open female.html and click a name.</p>";
+    return;
+  }
   if (!p) {
-    document.querySelector(".page").innerHTML = "<p style='padding:40px'>Profile not found. <a class='back' href='index.html'>Home</a></p>";
+    document.querySelector(".page").innerHTML = "<p style='padding:40px'>Unknown profile id. Use female.html and click a name.</p>";
     return;
   }
   document.title = p.name + " — Capital Companions";
@@ -113,10 +114,15 @@
     return "Yeah I'm good. You?";
   }
   async function answer(text) {
+    const useApi = location.search.indexOf("llm=1") !== -1;
+    if (!useApi) return localAnswer(text);
     try {
+      const ctrl = new AbortController();
+      const timer = setTimeout(function(){ ctrl.abort(); }, 2500);
       const res = await fetch("/api/chat", {
         method: "POST",
         headers: { "content-type": "application/json" },
+        signal: ctrl.signal,
         body: JSON.stringify({
           personaId: p.id,
           message: text,
@@ -124,6 +130,7 @@
           guestName: state.guestName || ""
         })
       });
+      clearTimeout(timer);
       if (res.ok) {
         const data = await res.json();
         if (data.reply) return data.reply;
