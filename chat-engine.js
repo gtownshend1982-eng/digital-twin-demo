@@ -1,4 +1,4 @@
-/* Pitch chat — slang-aware, houses, slots */
+/* Pitch chat — talk first; booking via button */
 (function () {
   var WING = {andreia:"female",tanita:"female",caroline:"female",faye:"female",joselyn:"female",ben:"male",glenn:"male",travis:"male",luke:"male",jeremy:"male",alexis:"trans",marianna:"trans",nicole:"trans",sophie:"trans",duda:"trans"};
   var SIZE = {ben:{inches:"7.5",cat:"large"},glenn:{inches:"6.5",cat:"medium"},travis:{inches:"6",cat:"medium"},luke:{inches:"7",cat:"large"},jeremy:{inches:"6.8",cat:"medium"},alexis:{inches:"7.5",cat:"large"},marianna:{inches:"6.5",cat:"medium"},nicole:{inches:"5",cat:"medium"},sophie:{inches:"6.2",cat:"medium"},duda:{inches:"7",cat:"large"}};
@@ -9,8 +9,7 @@
   var STOP=/^(hi|hey|hello|yo|yes|yeah|ok|okay|cool|im|i'm|me|you|who|what|when|how|free|tonight|today|book|hotel|love|baby|babe|hun|mate)$/i;
   function titleName(s){return String(s||"").replace(/[^\p{L}\p{N}'-]+/gu,"").replace(/^\w/,function(c){return c.toUpperCase();});}
   function extractGuestName(raw){
-    var text=String(raw||"").trim();
-    var m=text.match(/(?:i(?:['’]?m| am)|this is|call me)\s+([A-Za-z][A-Za-z'\-]{1,20})/i);
+    var m=String(raw||"").trim().match(/(?:i(?:['’]?m| am)|this is|call me)\s+([A-Za-z][A-Za-z'\-]{1,20})/i);
     if(m&&m[1]&&!STOP.test(m[1])) return titleName(m[1]);
     return "";
   }
@@ -35,7 +34,7 @@
     var n=state.guestName;
     var out=String(text||"").trim();
     if(n&&!state._named){out=out.replace(/[.!?]\s*$/,"")+", "+n+".";state._named=true;}
-    if(askMore!==false && !/\?/.test(out)) out+=" "+nextAsk(state);
+    if(askMore===true && !/\?/.test(out)) out+=" "+nextAsk(state);
     return out.replace(/\s+/g," ").trim();
   }
   window.twinOpening=function(p){return "Hi im "+((p&&p.name)||"me")+" who am i talking with";};
@@ -53,61 +52,33 @@
     var wing=WING[id]||"";
     if(/underage|teen|schoolgirl/.test(t)) return "No. Adult bookings only. That's the end of this chat.";
     if(!state.guestName && state.turns<=2) return "Nice to meet you. What should I call you?";
-    if(/^(hi|hey|hello|hiya)\b/.test(t) && state.guestName && state.turns<=3) return say(state,"Hey. Nice to meet you.",false);
-
-    if(/\bbb\b|bareback|no condom|owo|bbbj|bbbjtc|\bcim\b|cimws|\bcof\b|\bcob\b|atm\b|ass to mouth/.test(t)){
-      return say(state,"No. Protection stays on. I don't do bare or those extras off a list.",false);
-    }
-    if(/\bgfe\b|girlfriend experience/.test(t)) return say(state,"Yes — GFE is how I like it. Kissing, unhurried.",false);
-    if(/\bpse\b|porn star experience/.test(t)){
-      if(id==="faye"||id==="travis"||id==="luke") return say(state,"Can be more physical. Still not a porn set with no limits.",false);
-      return say(state,"I'm more GFE than PSE. Chemistry over performing.",false);
-    }
-    if(/\bfs\b|full service/.test(t)) return say(state,"Yes, that's a normal booking — not a checklist of extras.",false);
-    if(/\bbj\b|\bcbj\b|blow ?job|\bhj\b|hand ?job|happy ending/.test(t)) return say(state,"Oral and hands can be part of it. Covered. Not a menu item to haggle.",false);
-    if(/\bdfk\b|french kiss|\blk\b|light kissing/.test(t)) return say(state,"Kissing is part of how I work if the vibe is there.",false);
-    if(/\bdaty\b|dining at the y|cunnilingus/.test(t)){
-      if(wing==="male" && id==="glenn") return say(state,"With women, yes.",false);
-      return say(state,"If it fits the booking, yes.",false);
-    }
-    if(/\bgreek\b|anal sex|\bdp\b|\bddp\b|\bdato\b|rimming|\bar\b anal/.test(t)) return say(state,"That's not an automatic yes. Limits stay limits. Ask in person after we've booked a normal session.",false);
-    if(/spanish|russian|italian|titty ?fuck|body slide|\bbs\b|\bmsog\b/.test(t)) return say(state,"I don't work off country-code extras. Book the time and we'll see what the chemistry is.",false);
-    if(/\bdtf\b|down to fuck|dicked down|clapping cheeks|hook ?up/.test(t)) return say(state,"If you want to book, say a time. I'm not doing slang for the sake of it.",true);
-    if(/\bnsa\b|no strings|\bfwb\b|fuck buddy|sneaky link/.test(t)) return say(state,"This is a booking, not a secret boyfriend slot.",true);
-    if(/body count/.test(t)) return say(state,"I'm not doing that conversation.",false);
-    if(/seggs|\bcorn\b|accountant/.test(t)) return say(state,"You can just talk normally here.",false);
-    if(/\bdaty\b/.test(t)) return say(state,"If it fits, yes.",false);
-
-    if(/boobs?|tits|breast|bust|cup size/.test(t)){
-      if(wing==="male") return say(state,"That's a female or trans question.",false);
-      return say(state, BUST[id]||"Natural.", false);
-    }
-    if(/are you big|you hung|cock size|dick size|how big|how many inches|what size are you|well endowed|\beggplant\b|\uD83C\uDF46/.test(t)){
-      if(wing==="female") return say(state,"That's a male or trans question. I'm a woman.",false);
+    if(/^(hi|hey|hello|hiya)\b/.test(t) && state.guestName && state.turns<=3) return say(state,"Hey. Nice to meet you.");
+    if(/i('|)d like to book|book me now|want to book/.test(t)) return say(state,"Cute. Let's lock it in.", true);
+    if(/\bbb\b|bareback|no condom|owo|bbbj|\bcim\b|atm\b/.test(t)) return say(state,"No. Protection stays on.");
+    if(/\bgfe\b|girlfriend experience/.test(t)) return say(state,"Yes — GFE is how I like it.");
+    if(/\bpse\b/.test(t)) return say(state,"I'm more GFE than PSE.");
+    if(/\bfs\b|full service/.test(t)) return say(state,"Yes, as a normal booking.");
+    if(/boobs?|tits|breast|bust/.test(t)) return say(state, wing==="male" ? "That's a female or trans question." : (BUST[id]||"Natural."));
+    if(/are you big|you hung|cock size|dick size|how big|how many inches|well endowed/.test(t)){
+      if(wing==="female") return say(state,"That's a male or trans question.");
       var s=SIZE[id];
-      if(!s) return say(state,"You'll see.",false);
-      if(/inch/.test(t)) return say(state,"About "+s.inches+" inches.",false);
-      return say(state, s.cat==="large" ? "Yeah, on the bigger side." : "Not a monster, I do alright.", false);
+      if(!s) return say(state,"You'll see.");
+      if(/inch/.test(t)) return say(state,"About "+s.inches+" inches.");
+      return say(state, s.cat==="large" ? "Yeah, on the bigger side." : "Not a monster, I do alright.");
     }
-    if(/are you (a )?(trans|tranny|shemale|ladyboy)|trans woman/.test(t)) return say(state, wing==="trans" ? "Yes. Trans woman. She/her." : "No. I'm not trans.", false);
-    if(/are you (a )?(man|guy|male)/.test(t)) return say(state, wing==="male" ? "Yes. I'm a man." : "No.", false);
-    if(/are you (a )?(woman|girl|female)/.test(t)) return say(state, (wing==="female"||wing==="trans") ? "Yes. Woman. She/her." : "No. I'm a man.", false);
-    if(/who else|other (girls|guys|women|men)|male house|female house|trans house/.test(t)){
-      return say(state,"Three houses. Female: Andreia, Tanita, Caroline, Faye, Joselyn. Male: Ben, Glenn, Travis, Luke, Jeremy. Trans: Alexis, Marianna, Nicole, Sophie, Duda.",false);
+    if(/are you (a )?(trans|tranny|shemale)|trans woman/.test(t)) return say(state, wing==="trans" ? "Yes. Trans woman. She/her." : "No. I'm not trans.");
+    if(/are you (a )?(man|guy|male)/.test(t)) return say(state, wing==="male" ? "Yes. I'm a man." : "No.");
+    if(/are you (a )?(woman|girl|female)/.test(t)) return say(state, (wing==="female"||wing==="trans") ? "Yes. Woman. She/her." : "No. I'm a man.");
+    if(/who else|male house|female house|trans house/.test(t)) return say(state,"Three houses. Female: Andreia, Tanita, Caroline, Faye, Joselyn. Male: Ben, Glenn, Travis, Luke, Jeremy. Trans: Alexis, Marianna, Nicole, Sophie, Duda.");
+    if(/what (are you|r you) into|sexually|in bed|kinks?/.test(t)) return say(state,(SEX[id]||"GFE.")+" What are you in the mood for?");
+    if(/how are you|how's it going|whats up|what's up/.test(t)) return say(state,pick(["Yeah I'm good. Quiet afternoon.","Not bad. You?"]));
+    if(/30 min|half an hour/.test(t)) return say(state,"I don't do a rushed 30 minutes. "+min+" is the floor.");
+    if(/available|free|tonight|book/.test(t) || state.day || state.time){
+      if(state.time&&state.day) return say(state,"I can look at "+state.time+" "+state.day+".", true);
+      if(state.day&&!state.time) return say(state,"Tonight could work. What time?", false);
+      if(/available|free/.test(t)) return say(state,"Might be. Use Book me now when you want to lock it.");
     }
-    if(/i said/.test(t) || (/tonight|today/.test(t) && state.day && state.turns>2)){
-      if(state.time&&state.day) return say(state,"Got it — "+state.time+" "+state.day+".",true);
-      if(state.day) return say(state,"Got it — "+state.day+".",true);
-    }
-    if(/what (are you|r you) into|sexually|in bed|kinks?/.test(t)) return say(state,(SEX[id]||"GFE.")+" What are you in the mood for?",false);
-    if(/how are you|how's it going|whats up|what's up/.test(t)) return say(state,pick(["Yeah I'm good. Quiet afternoon.","Not bad. You?"]),false);
-    if(/30 min|half an hour|half hour/.test(t)) return say(state,"I don't do a rushed 30 minutes. "+min+" is the floor.");
-    if(/available|free/.test(t)||state.day||state.time){
-      if(state.time&&state.day) return say(state,"I can look at "+state.time+" "+state.day+".");
-      if(state.day&&!state.time) return say(state,"Tonight could work.");
-      if(state.time&&!state.day) return say(state,state.time+" is possible — which night?");
-      return say(state,"Might be.");
-    }
-    return say(state,pick(["Okay.","Yeah."]),state.turns>=5);
+    if(/i said/.test(t) && (state.day||state.time)) return say(state,"Got it — "+[state.time,state.day].filter(Boolean).join(" ")+".");
+    return say(state,pick(["Okay.","Yeah.","I'm here."]));
   };
 })();
