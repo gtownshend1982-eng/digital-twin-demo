@@ -1,25 +1,25 @@
-/* Pitch chat — conversation first */
+/* Pitch chat — remember name, day, time */
 (function () {
   var SEX = {
-    ben: "GFE, kissing, unhurried, I like it to feel like we actually fancy each other.",
+    ben: "GFE, kissing, unhurried. I like it to feel like we fancy each other.",
     glenn: "Girlfriend energy with women — talking, kissing, not a porn scene.",
-    travis: "Kissing, oral, I like being wanted. Light kink if the vibe is there.",
-    luke: "Can be GFE or more physical. I don't rush a first-time guest.",
-    jeremy: "Dinner, hotel, slow. I'm not a checklist.",
-    andreia: "Soft GFE — kissing, cuddling, taking our time. I like chemistry more than a menu.",
-    tanita: "Hotel GFE, dinner, unhurried. Refined, not rushed.",
-    caroline: "Straightforward. Kissing, standard session, no drama.",
+    travis: "Kissing, oral, I like being wanted. Light kink if it fits.",
+    luke: "GFE or more physical. I don't rush a first-timer.",
+    jeremy: "Dinner, hotel, slow. Not a checklist.",
+    andreia: "Soft GFE — kissing, cuddling, taking our time. Chemistry over a menu.",
+    tanita: "Hotel GFE, dinner, unhurried.",
+    caroline: "Straightforward. Kissing, standard session.",
     faye: "Dominance, protocol, control. Not a girlfriend date.",
     joselyn: "Soft D/s, praise, gentle to medium. Aftercare matters.",
     alexis: "GFE, kissing, I can lead. Respect first.",
-    marianna: "Kissing, oral, body worship, playful GFE.",
-    nicole: "Sweet GFE — kissing, cuddling, oral. Kindness gets you further.",
+    marianna: "Kissing, oral, playful GFE.",
+    nicole: "Sweet GFE — kissing, cuddling, oral.",
     sophie: "Massage into sex, kissing, quiet GFE.",
-    duda: "Dinner, hotel, kissing. Being seen, not rushed."
+    duda: "Dinner, hotel, kissing. Not rushed."
   };
   function pick(a) { return a[Math.floor(Math.random() * a.length)]; }
   function norm(s) { return String(s || "").toLowerCase().replace(/[’']/g, "'").trim(); }
-  var STOP = /^(hi|hey|hello|yo|yes|yeah|ok|okay|cool|im|i'm|me|you|who|what|when|how|free|tonight|book|hotel|love|babe|mate)$/i;
+  var STOP = /^(hi|hey|hello|yo|yes|yeah|ok|okay|cool|im|i'm|me|you|who|what|when|how|free|tonight|today|tomorrow|book|hotel|love|baby|babe|hun|mate)$/i;
   function titleName(s) {
     return String(s || "").replace(/[^\p{L}\p{N}'-]+/gu, "").replace(/^\w/, function (c) { return c.toUpperCase(); });
   }
@@ -27,21 +27,31 @@
     var text = String(raw || "").trim();
     var m = text.match(/(?:i(?:['’]?m| am)|this is|call me)\s+([A-Za-z][A-Za-z'\-]{1,20})/i);
     if (m && m[1] && !STOP.test(m[1])) return titleName(m[1]);
-    var words = text.replace(/[^A-Za-z'\- ]/g, " ").trim().split(/\s+/);
-    if (words.length === 1 && words[0].length >= 2 && words[0].length <= 20 && !STOP.test(words[0])) return titleName(words[0]);
     return "";
   }
-  function ask(state) {
-    var qs = ["What night were you thinking?", "This week or next?", "Incall or a hotel?"];
-    var i = (state._qi || 0) % qs.length;
-    state._qi = i + 1;
-    return qs[i];
+  function grabSlots(raw, state) {
+    var t = norm(raw);
+    if (/\btonight\b|\btoday\b/.test(t)) state.day = "tonight";
+    if (/\btomorrow\b/.test(t)) state.day = "tomorrow";
+    if (/\bweekend\b/.test(t)) state.day = "the weekend";
+    var d = t.match(/\b(monday|tuesday|wednesday|thursday|friday|saturday|sunday)\b/);
+    if (d) state.day = d[1];
+    var tm = t.match(/\b(\d{1,2})(?::(\d{2}))?\s*(am|pm)\b/) || t.match(/\b(\d{1,2})\s*(am|pm)\b/);
+    if (tm) state.time = tm[0].replace(/\s+/g, "");
+    if (/\bincall\b|your place|at yours/.test(t)) state.where = "incall";
+    if (/\boutcall\b|hotel|my place/.test(t)) state.where = "hotel";
   }
-  function say(state, text, addAsk) {
+  function nextAsk(state) {
+    if (!state.day) return "Tonight or another night?";
+    if (!state.time) return "What time?";
+    if (!state.where) return "Incall or hotel?";
+    return "Want me to look at holding " + state.time + " " + state.day + "?";
+  }
+  function say(state, text, askMore) {
     var n = state.guestName;
     var out = String(text || "").trim();
     if (n && !state._named) { out = out.replace(/[.!?]\s*$/, "") + ", " + n + "."; state._named = true; }
-    if (addAsk && !/\?/.test(out)) out += " " + ask(state);
+    if (askMore !== false && !/\?/.test(out)) out += " " + nextAsk(state);
     return out.replace(/\s+/g, " ").trim();
   }
   window.twinOpening = function (p) { return "Hi im " + ((p && p.name) || "me") + " who am i talking with"; };
@@ -53,32 +63,32 @@
     var t = norm(raw);
     state.turns = (state.turns || 0) + 1;
     window.twinCaptureName(raw, state);
+    grabSlots(raw, state);
     var id = (p && p.id) || "";
     var min = (p && p.minDuration) || "1 hour";
     if (/underage|teen|schoolgirl/.test(t)) return "No. Adult bookings only. That's the end of this chat.";
     if (!state.guestName && state.turns <= 2) return "Nice to meet you. What should I call you?";
-    if (/what (are you|r you) into|sexually|in bed|what do you like (to do|in bed)|kinks?/.test(t)) {
-      var line = SEX[id] || "I keep it GFE — kissing, chemistry, nothing off a dirty menu.";
-      return say(state, line + " What are you in the mood for?", false);
+    if (/^(hi|hey|hello|hiya)\b/.test(t) && state.guestName && state.turns <= 3) {
+      return say(state, "Hey. Nice to meet you.", false);
     }
-    if (/what do you like|hobbies|hobby/.test(t)) {
-      var into = (p && (p.into || p.topics)) || "easy nights and decent food";
-      return say(state, "Outside of bookings, " + String(into).split(".")[0].toLowerCase() + ".", false);
+    if (/i said/.test(t) || (/tonight|today/.test(t) && state.day && state.turns > 2)) {
+      if (state.time && state.day) return say(state, "Got it — " + state.time + " " + state.day + ".", true);
+      if (state.day) return say(state, "Got it — " + state.day + ".", true);
+    }
+    if (/what (are you|r you) into|sexually|in bed|kinks?/.test(t)) {
+      return say(state, (SEX[id] || "Soft GFE — kissing, chemistry.") + " What are you in the mood for?", false);
     }
     if (/how are you|how's it going|whats up|what's up/.test(t)) {
       return say(state, pick(["Yeah I'm good. Quiet afternoon.", "Not bad. You?"]), false);
     }
-    if (/wasn'?t yet|not sure yet|don't know yet|dont know yet/.test(t)) {
-      return say(state, "No rush. Weeknight or weekend whenever you know.", false);
+    if (/30 min|half an hour|half hour/.test(t)) return say(state, "I don't do a rushed 30 minutes. " + min + " is the floor.");
+    if (/discount|haggle|cheaper|two for one/.test(t)) return say(state, "Rates stay the rates.");
+    if (/available|free/.test(t) || state.day || state.time) {
+      if (state.time && state.day) return say(state, "I can look at " + state.time + " " + state.day + ".");
+      if (state.day && !state.time) return say(state, "Tonight could work.");
+      if (state.time && !state.day) return say(state, state.time + " is possible — which night?");
+      return say(state, "Might be.");
     }
-    if (/30 min|half an hour|half hour/.test(t)) return say(state, "I don't do a rushed 30 minutes. " + min + " is the floor.", true);
-    if (/discount|haggle|cheaper|two for one/.test(t)) return say(state, "Rates stay the rates.", true);
-    if (/travelodge|motel/.test(t)) return say(state, "I don't do budget motels. Proper hotel or incall.", true);
-    if (/\bcar\b/.test(t)) return say(state, "No cars. Mine or a proper hotel.", true);
-    if (/bare option|bareback|no condom/.test(t)) return say(state, "No. Protection stays on.", true);
-    if (/rate|how much|\u00a3/.test(t)) return say(state, "Day, how long, incall or hotel and I'll send figures.", true);
-    if (/where are you|based/.test(t)) return say(state, (p && p.city) || "London.", true);
-    if (/free tonight|available|tonight|book/.test(t)) return say(state, "Might be. What time were you thinking?", false);
-    return say(state, pick(["Okay.", "Got you.", "I'm here."]), state.turns >= 4);
+    return say(state, pick(["Okay.", "Yeah."]), state.turns >= 5);
   };
 })();
