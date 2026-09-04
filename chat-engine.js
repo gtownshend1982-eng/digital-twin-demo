@@ -1,4 +1,4 @@
-/* Same-persona exact gold only. No stealing Ben's bro. */
+/* Same-persona exact gold only. Nicole-style small talk. */
 (function () {
   var AREA = {andreia:"Kensington",tanita:"Central London",caroline:"Mayfair",faye:"Chelsea",joselyn:"Soho",ben:"Vauxhall",glenn:"East London",travis:"Vauxhall",luke:"Vauxhall",jeremy:"Mayfair",alexis:"Kensington",marianna:"Chelsea",nicole:"Soho",sophie:"Mayfair",duda:"Kensington"};
   var VOICE = {ben:"mate",travis:"mate",luke:"mate",glenn:"mate",jeremy:"",andreia:"love",tanita:"babe",caroline:"darling",faye:"babe",joselyn:"babe",alexis:"babe",marianna:"babe",nicole:"babe",sophie:"babe",duda:"amor"};
@@ -23,14 +23,14 @@
     if(tm){ state.time=tm[1]+((tm[2]&&/am|pm/i.test(String(tm[2])))?tm[2]:"pm"); if(!state.day) state.day="tonight"; }
     if(/1 hour|one hour/.test(t)) state.wantHours=1;
   }
+  function tag(id){ return VOICE[id]||""; }
   function say(state,text){
     var n=state.guestName, out=String(text||"").trim();
     if(n&&!state._named){ out=out.replace(/[.!?]\s*$/,"")+", "+n+"."; state._named=true; }
     return out.replace(/\s+/g," ").trim();
   }
   function fill(ans,p,state){
-    var guest=state.guestName||"";
-    var name=p.name||"";
+    var guest=state.guestName||""; var name=p.name||"";
     return ans.replace(/\bGlenn\b/g, guest||"Glenn").replace(/\bTanita\b/g,name).replace(/\bTravis\b/g,name).replace(/\bNicole\b/g,name).replace(/\bBen\b/g,name);
   }
   function retrieveExact(p, raw){
@@ -54,6 +54,7 @@
     var id=(p&&p.id)||"";
     var area=AREA[id]||"London";
     var mh=parseMinHours(p);
+    var v=tag(id);
     var female = /female|transexual|trans/.test(String(p.wing||""));
     var reply="";
     if(/underage|teen/.test(t)) return "No. Adult bookings only.";
@@ -62,14 +63,24 @@
     if(/not what i asked|what are you saying|i didn'?t ask|again what/.test(t)) return say(state, "You're right, I jumped. What did you actually want to know?");
     if(/are you there|you there|hello\?|sorry are you/.test(t)) return say(state, "Yes, I'm here. What did you want to ask?");
     if(!state.guestName && state.turns<=2) return "Hey. Who am I talking to?";
-    if(state.guestName && extractGuestName(raw) && state.turns<=3) return say(state, "Nice to meet you. How's your afternoon going?");
+    if(state.guestName && extractGuestName(raw) && state.turns<=3){
+      var n=state.guestName;
+      if(v==="mate") return "Alright "+n+"! Good to meet you mate. How's your afternoon going?";
+      if(v==="darling") return "Hello "+n+". Splendid to meet you. How is your afternoon unfolding?";
+      return "Hey "+n+"! Lovely to meet you"+(v?(" "+v):"")+". How's your afternoon going?";
+    }
     var gold = retrieveExact(p, raw);
     if(gold){
       reply = fill(gold, p, state);
-      if(female) reply = reply.replace(/\bbro\b/gi, "babe").replace(/\bmate\b/gi, "babe");
+      if(female) reply = reply.replace(/\bbro\b/gi, v||"babe").replace(/\bmate\b/gi, v||"babe");
       return say(state, reply);
     }
-    if(/how are you|not bad/.test(t) && !/free|book|hour|into/.test(t)) return say(state, "Pretty good thanks. Just getting ready for the evening. What are you up to today?");
+    if(/yours\?|how are you|not bad thank|not bad yours/.test(t) && !/looking to see|was free/.test(t))
+      return say(state, "Pretty good thanks. Just relaxing at home in "+area+" and getting ready for the evening. What are you up to today? Busy one or taking it easy?");
+    if(/looking to see if you|see if you (was|were|are) free|if you'?re free|was looking/.test(t))
+      return say(state, "I might be. I'm based at my flat in "+area+" this evening. What time were you thinking?");
+    if(/what time (are you|you) free|what time (can|could) you/.test(t))
+      return say(state, "I've got availability from 7pm onwards tonight"+(v?(" "+v):"")+". What sort of time were you hoping to pop over?");
     if(/what you up to|wyd/.test(t)) return say(state, "Just in, music on. You busy or taking it easy?");
     if(/what (you|'?re you|are you) into|kind of vibe/.test(t)) return say(state, (SEX[id]||"GFE.")+" What vibe do you want tonight?");
     if(/sounds great|sounds good|that sounds/.test(t)) return say(state, "Good. What time were you thinking, or do you want to know something first?");
