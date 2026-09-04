@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Book</title>
+<link rel="stylesheet" href="css.css">
+<style>
+.book { max-width: 440px; margin: 40px auto; padding: 28px; background: #141414; color: #eee; border-radius: 16px; font-family: sans-serif; }
+.book h1 { font-size: 1.6rem; margin: 0 0 8px; }
+.pay { width: 100%; border: 0; border-radius: 12px; padding: 14px; background: #c9a227; font-weight: 700; cursor: pointer; }
+.slot { background: #1f1f1f; padding: 12px 14px; border-radius: 10px; margin: 16px 0; }
+</style>
+</head>
+<body>
+<div class="book" id="box"></div>
+<script src="profiles.js"></script>
+<script>
+(function () {
+  var q = new URLSearchParams(location.search);
+  var id = (q.get("id") || "nicole").toLowerCase();
+  var p = (window.PROFILES && window.PROFILES[id]) || { name: id };
+  var guest = q.get("name") || "";
+  var time = q.get("time") || "to be confirmed";
+  document.getElementById("box").innerHTML =
+    "<a href='profile.html?id=" + id + "'>Back to chat</a>" +
+    "<h1>Book " + p.name + "</h1>" +
+    "<p>2-hour minimum is \u00a3700 at mine. \u00a3100 deposit holds the diary. Balance cash on arrival.</p>" +
+    "<div class='slot'><b>Guest</b> " + (guest || "—") + "<br><b>Time</b> " + time + "<br><b>Deposit</b> \u00a3100</div>" +
+    "<button class='pay' id='pay'>Pay \u00a3100 deposit</button>" +
+    "<p>Pitch stub. Swap this button for Cal.com or Stripe later.</p>";
+  document.getElementById("pay").onclick = function () {
+    alert("Deposit link would open here. Slot: " + time + " with " + p.name + ".");
+  };
+})();
+</script>
+</body>
+</html>
