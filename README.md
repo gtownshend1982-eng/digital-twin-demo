@@ -1,23 +1,29 @@
-# Capital Companions — digital twin demo
+# Capital Companions demo
 
-Pitch demo. First bubble: `Hi im {Name} who am i talking with`.
+I cannot see C:\\Users\\Alexis\\digital-twin-demo from here. This repo is what that folder should match after `git pull`.
 
-## Why `file:///C:/Users/Alexis/digital-twin-demo/profile.html?id=andreia` is broken
+## Required files in that folder
 
-`profile.html` loads two scripts from the **same folder**:
-
-- `profiles.js`
-- `chat-engine.js`
-
-If those files are missing, the page says Profile not found and chat does nothing. An early GitHub clone only had HTML.
-
-Put `profiles.js` and `chat-engine.js` next to `profile.html`, then open `female.html` and click Andreia.
-
-## Optional server
-
-```bash
-npm install
-node server.js
+```
+C:\\Users\\Alexis\\digital-twin-demo\\
+  index.html
+  female.html
+  male.html
+  trans.html
+  profile.html
+  css.css
+  profiles.js      REQUIRED for chat
+  chat-engine.js   REQUIRED for chat
+  photos\\          optional jpgs
 ```
 
-http://localhost:8787
+If `profiles.js` or `chat-engine.js` is missing, profile.html is broken.
+
+## Open it
+
+1. `git pull` in that folder
+2. Double-click `female.html` (not profile.html first)
+3. Click Andreia
+4. First bubble: Hi im Andreia who am i talking with
+
+Photos are optional. Chat does not need them.
