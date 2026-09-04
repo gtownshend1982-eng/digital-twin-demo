@@ -1,31 +1,38 @@
-/* Pitch chat — remember name, day, time; know the three houses */
+/* Pitch chat — houses, slots, cock size for male/trans */
 (function () {
-  var HOUSE = {
-    female: ["Andreia", "Tanita", "Caroline", "Faye", "Joselyn"],
-    male: ["Ben", "Glenn", "Travis", "Luke", "Jeremy"],
-    trans: ["Alexis", "Marianna", "Nicole", "Sophie", "Duda"]
-  };
   var WING = {
     andreia:"female", tanita:"female", caroline:"female", faye:"female", joselyn:"female",
     ben:"male", glenn:"male", travis:"male", luke:"male", jeremy:"male",
     alexis:"trans", marianna:"trans", nicole:"trans", sophie:"trans", duda:"trans"
   };
+  var SIZE = {
+    ben:    { inches:"7.5", cat:"large", extra:"uncut" },
+    glenn:  { inches:"6.5", cat:"medium", extra:"cut" },
+    travis: { inches:"6", cat:"medium", extra:"uncut" },
+    luke:   { inches:"7", cat:"large", extra:"cut" },
+    jeremy: { inches:"6.8", cat:"medium", extra:"cut" },
+    alexis: { inches:"7.5", cat:"large", extra:"cut" },
+    marianna:{ inches:"6.5", cat:"medium", extra:"uncut" },
+    nicole: { inches:"5", cat:"medium", extra:"cut" },
+    sophie: { inches:"6.2", cat:"medium", extra:"uncut" },
+    duda:   { inches:"7", cat:"large", extra:"uncut" }
+  };
   var SEX = {
-    ben: "GFE, kissing, unhurried. I like it to feel like we fancy each other.",
-    glenn: "Girlfriend energy with women — talking, kissing, not a porn scene.",
-    travis: "Kissing, oral, I like being wanted. Light kink if it fits.",
-    luke: "GFE or more physical. I don't rush a first-timer.",
-    jeremy: "Dinner, hotel, slow. Not a checklist.",
-    andreia: "Soft GFE — kissing, cuddling, taking our time. Chemistry over a menu.",
+    ben: "GFE, kissing, unhurried.",
+    glenn: "Girlfriend energy with women — talking, kissing.",
+    travis: "Kissing, oral, I like being wanted.",
+    luke: "GFE or more physical.",
+    jeremy: "Dinner, hotel, slow.",
+    andreia: "Soft GFE — kissing, cuddling, taking our time.",
     tanita: "Hotel GFE, dinner, unhurried.",
-    caroline: "Straightforward. Kissing, standard session.",
-    faye: "Dominance, protocol, control. Not a girlfriend date.",
-    joselyn: "Soft D/s, praise, gentle to medium. Aftercare matters.",
-    alexis: "GFE, kissing, I can lead. Respect first.",
+    caroline: "Straightforward session.",
+    faye: "Dominance, protocol, control.",
+    joselyn: "Soft D/s, praise, aftercare.",
+    alexis: "GFE, kissing, I can lead.",
     marianna: "Kissing, oral, playful GFE.",
-    nicole: "Sweet GFE — kissing, cuddling, oral.",
-    sophie: "Massage into sex, kissing, quiet GFE.",
-    duda: "Dinner, hotel, kissing. Not rushed."
+    nicole: "Sweet GFE — kissing, cuddling.",
+    sophie: "Massage into sex, quiet GFE.",
+    duda: "Dinner, hotel, kissing."
   };
   function pick(a) { return a[Math.floor(Math.random() * a.length)]; }
   function norm(s) { return String(s || "").toLowerCase().replace(/[’']/g, "'").trim(); }
@@ -43,7 +50,6 @@
     var t = norm(raw);
     if (/\btonight\b|\btoday\b/.test(t)) state.day = "tonight";
     if (/\btomorrow\b/.test(t)) state.day = "tomorrow";
-    if (/\bweekend\b/.test(t)) state.day = "the weekend";
     var d = t.match(/\b(monday|tuesday|wednesday|thursday|friday|saturday|sunday)\b/);
     if (d) state.day = d[1];
     var tm = t.match(/\b(\d{1,2})(?::(\d{2}))?\s*(am|pm)\b/) || t.match(/\b(\d{1,2})\s*(am|pm)\b/);
@@ -64,12 +70,12 @@
     if (askMore !== false && !/\?/.test(out)) out += " " + nextAsk(state);
     return out.replace(/\s+/g, " ").trim();
   }
-  function selfLine(p) {
-    var w = WING[p && p.id] || p.wing || "";
-    if (w === "female") return "I'm a woman. Female house — Andreia, Tanita, Caroline, Faye, Joselyn.";
-    if (w === "male") return "I'm a man. Male house — Ben, Glenn, Travis, Luke, Jeremy.";
-    if (w === "trans" || w === "transexual") return "I'm a trans woman. Trans house — Alexis, Marianna, Nicole, Sophie, Duda.";
-    return "Capital Companions has female, male and trans.";
+  function sizeLine(id, wantInches) {
+    var s = SIZE[id];
+    if (!s) return "Wrong house for that question.";
+    if (wantInches) return "About " + s.inches + " inches, " + s.extra + ".";
+    if (s.cat === "large") return "Yeah, on the bigger side.";
+    return "Not a monster, I do alright.";
   }
   window.twinOpening = function (p) { return "Hi im " + ((p && p.name) || "me") + " who am i talking with"; };
   window.twinCaptureName = function (raw, state) {
@@ -89,33 +95,36 @@
     if (/^(hi|hey|hello|hiya)\b/.test(t) && state.guestName && state.turns <= 3) {
       return say(state, "Hey. Nice to meet you.", false);
     }
-    if (/are you (a )?(trans|tranny|shemale|ladyboy)|trans woman|transsexual/.test(t)) {
+    if (/are you big|you hung|cock size|dick size|how big|how many inches|what size are you|well endowed|thick cock/.test(t)) {
+      if (wing === "female") return say(state, "That's a male or trans question. I'm a woman.", false);
+      return say(state, sizeLine(id, /inch/.test(t)), false);
+    }
+    if (/are you (a )?(trans|tranny|shemale|ladyboy)|trans woman/.test(t)) {
       if (wing === "trans") return say(state, "Yes. Trans woman. She/her.", false);
-      return say(state, "No. I'm not trans. " + selfLine(p), false);
+      return say(state, "No. I'm not trans.", false);
     }
-    if (/are you (a )?(man|guy|male)|you a boy/.test(t)) {
+    if (/are you (a )?(man|guy|male)/.test(t)) {
       if (wing === "male") return say(state, "Yes. I'm a man.", false);
-      return say(state, "No. " + selfLine(p), false);
+      return say(state, "No.", false);
     }
-    if (/are you (a )?(woman|girl|female)|you a lady/.test(t)) {
+    if (/are you (a )?(woman|girl|female)/.test(t)) {
       if (wing === "female" || wing === "trans") return say(state, "Yes. Woman. She/her.", false);
       return say(state, "No. I'm a man.", false);
     }
-    if (/who else|other (girls|guys|women|men|girls)|do you have (any )?(girls|guys|men|women|trans)|male house|female house|trans house/.test(t)) {
-      return say(state, "Three houses. Female: Andreia, Tanita, Caroline, Faye, Joselyn. Male: Ben, Glenn, Travis, Luke, Jeremy. Trans: Alexis, Marianna, Nicole, Sophie, Duda. I'm in the " + (wing || "same") + " house.", false);
+    if (/who else|other (girls|guys|women|men)|do you have (any )?(girls|guys|men|women|trans)|male house|female house|trans house/.test(t)) {
+      return say(state, "Three houses. Female: Andreia, Tanita, Caroline, Faye, Joselyn. Male: Ben, Glenn, Travis, Luke, Jeremy. Trans: Alexis, Marianna, Nicole, Sophie, Duda.", false);
     }
     if (/i said/.test(t) || (/tonight|today/.test(t) && state.day && state.turns > 2)) {
       if (state.time && state.day) return say(state, "Got it — " + state.time + " " + state.day + ".", true);
       if (state.day) return say(state, "Got it — " + state.day + ".", true);
     }
     if (/what (are you|r you) into|sexually|in bed|kinks?/.test(t)) {
-      return say(state, (SEX[id] || "Soft GFE — kissing, chemistry.") + " What are you in the mood for?", false);
+      return say(state, (SEX[id] || "GFE.") + " What are you in the mood for?", false);
     }
     if (/how are you|how's it going|whats up|what's up/.test(t)) {
       return say(state, pick(["Yeah I'm good. Quiet afternoon.", "Not bad. You?"]), false);
     }
     if (/30 min|half an hour|half hour/.test(t)) return say(state, "I don't do a rushed 30 minutes. " + min + " is the floor.");
-    if (/discount|haggle|cheaper|two for one/.test(t)) return say(state, "Rates stay the rates.");
     if (/available|free/.test(t) || state.day || state.time) {
       if (state.time && state.day) return say(state, "I can look at " + state.time + " " + state.day + ".");
       if (state.day && !state.time) return say(state, "Tonight could work.");
