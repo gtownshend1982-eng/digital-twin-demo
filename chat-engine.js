@@ -1,36 +1,9 @@
-/* Pitch chat — houses, slots, cock size, breast size */
+/* Pitch chat — slang-aware, houses, slots */
 (function () {
-  var WING = {
-    andreia:"female", tanita:"female", caroline:"female", faye:"female", joselyn:"female",
-    ben:"male", glenn:"male", travis:"male", luke:"male", jeremy:"male",
-    alexis:"trans", marianna:"trans", nicole:"trans", sophie:"trans", duda:"trans"
-  };
-  var SIZE = {
-    ben:{inches:"7.5",cat:"large"}, glenn:{inches:"6.5",cat:"medium"}, travis:{inches:"6",cat:"medium"},
-    luke:{inches:"7",cat:"large"}, jeremy:{inches:"6.8",cat:"medium"},
-    alexis:{inches:"7.5",cat:"large"}, marianna:{inches:"6.5",cat:"medium"}, nicole:{inches:"5",cat:"medium"},
-    sophie:{inches:"6.2",cat:"medium"}, duda:{inches:"7",cat:"large"}
-  };
-  var BUST = {
-    andreia: "Big natural chest. Soft curves.",
-    tanita: "Natural, proportional on a tall frame.",
-    caroline: "Natural, girl-next-door. Not a fake glam set.",
-    faye: "Natural. Not the point of the booking.",
-    joselyn: "Natural, petite frame.",
-    alexis: "Enhanced. Hourglass.",
-    marianna: "Enhanced. Brazilian hourglass.",
-    nicole: "Enhanced. Petite frame.",
-    sophie: "Enhanced. Willowy, not huge.",
-    duda: "Enhanced. Model frame, not the main event."
-  };
-  var SEX = {
-    ben:"GFE, kissing, unhurried.", glenn:"Girlfriend energy with women.", travis:"Kissing, oral.",
-    luke:"GFE or more physical.", jeremy:"Dinner, hotel, slow.",
-    andreia:"Soft GFE — kissing, cuddling.", tanita:"Hotel GFE, dinner.", caroline:"Straightforward session.",
-    faye:"Dominance, protocol.", joselyn:"Soft D/s, aftercare.",
-    alexis:"GFE, kissing, I can lead.", marianna:"Playful GFE.", nicole:"Sweet GFE.",
-    sophie:"Massage into sex.", duda:"Dinner, hotel, kissing."
-  };
+  var WING = {andreia:"female",tanita:"female",caroline:"female",faye:"female",joselyn:"female",ben:"male",glenn:"male",travis:"male",luke:"male",jeremy:"male",alexis:"trans",marianna:"trans",nicole:"trans",sophie:"trans",duda:"trans"};
+  var SIZE = {ben:{inches:"7.5",cat:"large"},glenn:{inches:"6.5",cat:"medium"},travis:{inches:"6",cat:"medium"},luke:{inches:"7",cat:"large"},jeremy:{inches:"6.8",cat:"medium"},alexis:{inches:"7.5",cat:"large"},marianna:{inches:"6.5",cat:"medium"},nicole:{inches:"5",cat:"medium"},sophie:{inches:"6.2",cat:"medium"},duda:{inches:"7",cat:"large"}};
+  var BUST = {andreia:"Big natural chest. Soft curves.",tanita:"Natural, proportional on a tall frame.",caroline:"Natural, girl-next-door.",faye:"Natural. Not the point of the booking.",joselyn:"Natural, petite frame.",alexis:"Enhanced. Hourglass.",marianna:"Enhanced. Brazilian hourglass.",nicole:"Enhanced. Petite frame.",sophie:"Enhanced. Willowy, not huge.",duda:"Enhanced. Model frame."};
+  var SEX = {ben:"GFE, kissing, unhurried.",glenn:"Girlfriend energy with women.",travis:"Kissing, oral.",luke:"GFE or more physical.",jeremy:"Dinner, hotel, slow.",andreia:"Soft GFE — kissing, cuddling.",tanita:"Hotel GFE, dinner.",caroline:"Straightforward session.",faye:"Dominance, protocol.",joselyn:"Soft D/s, aftercare.",alexis:"GFE, kissing, I can lead.",marianna:"Playful GFE.",nicole:"Sweet GFE.",sophie:"Massage into sex.",duda:"Dinner, hotel, kissing."};
   function pick(a){return a[Math.floor(Math.random()*a.length)];}
   function norm(s){return String(s||"").toLowerCase().replace(/[’']/g,"'").trim();}
   var STOP=/^(hi|hey|hello|yo|yes|yeah|ok|okay|cool|im|i'm|me|you|who|what|when|how|free|tonight|today|book|hotel|love|baby|babe|hun|mate)$/i;
@@ -81,20 +54,42 @@
     if(/underage|teen|schoolgirl/.test(t)) return "No. Adult bookings only. That's the end of this chat.";
     if(!state.guestName && state.turns<=2) return "Nice to meet you. What should I call you?";
     if(/^(hi|hey|hello|hiya)\b/.test(t) && state.guestName && state.turns<=3) return say(state,"Hey. Nice to meet you.",false);
-    if(/boobs?|tits|breast|bust|cup size|how big are your (boobs|tits|breasts)/.test(t)){
+
+    if(/\bbb\b|bareback|no condom|owo|bbbj|bbbjtc|\bcim\b|cimws|\bcof\b|\bcob\b|atm\b|ass to mouth/.test(t)){
+      return say(state,"No. Protection stays on. I don't do bare or those extras off a list.",false);
+    }
+    if(/\bgfe\b|girlfriend experience/.test(t)) return say(state,"Yes — GFE is how I like it. Kissing, unhurried.",false);
+    if(/\bpse\b|porn star experience/.test(t)){
+      if(id==="faye"||id==="travis"||id==="luke") return say(state,"Can be more physical. Still not a porn set with no limits.",false);
+      return say(state,"I'm more GFE than PSE. Chemistry over performing.",false);
+    }
+    if(/\bfs\b|full service/.test(t)) return say(state,"Yes, that's a normal booking — not a checklist of extras.",false);
+    if(/\bbj\b|\bcbj\b|blow ?job|\bhj\b|hand ?job|happy ending/.test(t)) return say(state,"Oral and hands can be part of it. Covered. Not a menu item to haggle.",false);
+    if(/\bdfk\b|french kiss|\blk\b|light kissing/.test(t)) return say(state,"Kissing is part of how I work if the vibe is there.",false);
+    if(/\bdaty\b|dining at the y|cunnilingus/.test(t)){
+      if(wing==="male" && id==="glenn") return say(state,"With women, yes.",false);
+      return say(state,"If it fits the booking, yes.",false);
+    }
+    if(/\bgreek\b|anal sex|\bdp\b|\bddp\b|\bdato\b|rimming|\bar\b anal/.test(t)) return say(state,"That's not an automatic yes. Limits stay limits. Ask in person after we've booked a normal session.",false);
+    if(/spanish|russian|italian|titty ?fuck|body slide|\bbs\b|\bmsog\b/.test(t)) return say(state,"I don't work off country-code extras. Book the time and we'll see what the chemistry is.",false);
+    if(/\bdtf\b|down to fuck|dicked down|clapping cheeks|hook ?up/.test(t)) return say(state,"If you want to book, say a time. I'm not doing slang for the sake of it.",true);
+    if(/\bnsa\b|no strings|\bfwb\b|fuck buddy|sneaky link/.test(t)) return say(state,"This is a booking, not a secret boyfriend slot.",true);
+    if(/body count/.test(t)) return say(state,"I'm not doing that conversation.",false);
+    if(/seggs|\bcorn\b|accountant/.test(t)) return say(state,"You can just talk normally here.",false);
+    if(/\bdaty\b/.test(t)) return say(state,"If it fits, yes.",false);
+
+    if(/boobs?|tits|breast|bust|cup size/.test(t)){
       if(wing==="male") return say(state,"That's a female or trans question.",false);
       return say(state, BUST[id]||"Natural.", false);
     }
-    if(/are you big|you hung|cock size|dick size|how big|how many inches|what size are you|well endowed/.test(t)){
+    if(/are you big|you hung|cock size|dick size|how big|how many inches|what size are you|well endowed|\beggplant\b|\uD83C\uDF46/.test(t)){
       if(wing==="female") return say(state,"That's a male or trans question. I'm a woman.",false);
       var s=SIZE[id];
       if(!s) return say(state,"You'll see.",false);
       if(/inch/.test(t)) return say(state,"About "+s.inches+" inches.",false);
       return say(state, s.cat==="large" ? "Yeah, on the bigger side." : "Not a monster, I do alright.", false);
     }
-    if(/are you (a )?(trans|tranny|shemale|ladyboy)|trans woman/.test(t)){
-      return say(state, wing==="trans" ? "Yes. Trans woman. She/her." : "No. I'm not trans.", false);
-    }
+    if(/are you (a )?(trans|tranny|shemale|ladyboy)|trans woman/.test(t)) return say(state, wing==="trans" ? "Yes. Trans woman. She/her." : "No. I'm not trans.", false);
     if(/are you (a )?(man|guy|male)/.test(t)) return say(state, wing==="male" ? "Yes. I'm a man." : "No.", false);
     if(/are you (a )?(woman|girl|female)/.test(t)) return say(state, (wing==="female"||wing==="trans") ? "Yes. Woman. She/her." : "No. I'm a man.", false);
     if(/who else|other (girls|guys|women|men)|male house|female house|trans house/.test(t)){
