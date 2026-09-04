@@ -1,9 +1,8 @@
-/* Nicole-style flow for every persona */
+/* WhatsApp-ish: short lines, one question. */
 (function () {
   var AREA = {andreia:"Kensington",tanita:"Central London",caroline:"Mayfair",faye:"Chelsea",joselyn:"Soho",ben:"Vauxhall",glenn:"East London",travis:"Vauxhall",luke:"Vauxhall",jeremy:"Mayfair",alexis:"Kensington",marianna:"Chelsea",nicole:"Soho",sophie:"Mayfair",duda:"Kensington"};
   var VOICE = {ben:"mate",travis:"mate",luke:"mate",glenn:"mate",jeremy:"",andreia:"love",tanita:"babe",caroline:"darling",faye:"babe",joselyn:"babe",alexis:"babe",marianna:"babe",nicole:"babe",sophie:"babe",duda:"amor"};
-  var SEX = {nicole:"I'm all about a super fun, passionate GFE vibe. Lots of sweet kissing, affection, and genuine intimacy.",tanita:"I'm all about a proper, passionate GFE. Lots of kissing, total intimacy.",andreia:"I'm all about a passionate, affectionate GFE. Lots of kissing and chemistry.",ben:"I keep it focused on a full GFE vibe. Lots of kissing, physical chemistry.",travis:"I keep it focused on a full GFE vibe. Lots of kissing, physical chemistry.",luke:"High-end GFE. Warm chemistry, passionate kissing.",jeremy:"A sophisticated, affectionate GFE. Unhurried and refined.",caroline:"A luxurious genuine Girlfriend Experience. Passionate kissing, unhurried.",faye:"A super passionate, affectionate GFE. Kissing and chemistry.",joselyn:"A fiery, passionate GFE. Sweet kissing and cuddling.",alexis:"A glamorous GFE. Sweet kissing and affection.",marianna:"A playful passionate GFE.",sophie:"Massage into a warm GFE.",duda:"A passionate GFE. Kissing and chemistry.",glenn:"Girlfriend energy. Unhurried."};
-  var ANAL = {caroline:"No. I don't offer that.",travis:"I don't offer anal. GFE only.",ben:"I don't offer anal. GFE only.",nicole:"I don't offer anal. Passionate GFE only."};
+  var SEX = {nicole:"Super fun passionate GFE \u2014 kissing, affection, no rush.",tanita:"Proper passionate GFE. Kissing, unhurried.",andreia:"Affectionate GFE. Kissing and chemistry.",ben:"Full GFE. Kissing, physical, no clock-watching.",travis:"Relaxed GFE. Kissing, chemistry, no pressure.",luke:"Warm GFE. Chemistry first.",jeremy:"Refined GFE. Unhurried.",caroline:"Luxurious GFE. Kissing, no rush.",faye:"Passionate GFE.",joselyn:"Fiery GFE. Kissing and cuddles.",alexis:"Glam GFE.",marianna:"Playful GFE.",sophie:"Massage into GFE.",duda:"Passionate GFE.",glenn:"Girlfriend energy."};
   function norm(s){return String(s||"").toLowerCase().replace(/['\u2019]/g,"'").replace(/\s+/g," ").trim();}
   function titleName(s){return String(s||"").replace(/[^\p{L}\p{N}'-]+/gu,"").replace(/^\w/,function(c){return c.toUpperCase();});}
   var STOP=/^(hi|hey|hello|yo|yes|yeah|ok|okay|cool|im|i'm|me|you|who|what|when|how|free|tonight|today|book|hotel|love|baby|babe|hun|mate|bro|here|sorry|the|and|for|with|that|this|not|bad)$/i;
@@ -24,11 +23,7 @@
     if(/1 hour|one hour/.test(t)) state.wantHours=1;
   }
   function tag(id){ return VOICE[id]||""; }
-  function say(state,text){
-    var n=state.guestName, out=String(text||"").trim();
-    if(n&&!state._named){ out=out.replace(/[.!?]\s*$/,"")+", "+n+"."; state._named=true; }
-    return out.replace(/\s+/g," ").trim();
-  }
+  function vbit(v){ return v ? " "+v : ""; }
   function fill(ans,p,state){
     var guest=state.guestName||""; var name=p.name||"";
     return ans.replace(/\bGlenn\b/g, guest||"Glenn").replace(/\bTanita\b/g,name).replace(/\bTravis\b/g,name).replace(/\bNicole\b/g,name).replace(/\bBen\b/g,name);
@@ -55,46 +50,56 @@
     var area=AREA[id]||"London";
     var mh=parseMinHours(p);
     var v=tag(id);
-    var female = /female|transexual|trans/.test(String(p.wing||""));
-    var reply="";
+    var female=/female|transexual|trans/.test(String(p.wing||""));
+    var n=state.guestName||"";
     if(/underage|teen/.test(t)) return "No. Adult bookings only.";
-    if(/\bbro\b/.test(t) && female) return say(state, "Sorry \u2014 that was a slip. I wouldn't call you bro.");
-    if(/^(stop|enough|shut up)\b/.test(t)) return say(state, "Okay. Ask me one thing and I'll answer that.");
-    if(/not what i asked|what are you saying|i didn'?t ask|again what/.test(t)) return say(state, "You're right, I jumped. What did you actually want to know?");
-    if(/are you there|you there|hello\?|sorry are you/.test(t)) return say(state, "Yes I'm here. What did you want to ask?");
-    if(!state.guestName && state.turns<=2) return "Hey. Who am I talking to?";
+    if(/\bbro\b/.test(t) && female) return "Haha sorry \u2014 wouldn't call you bro.";
+    if(/^(stop|enough|shut up)\b/.test(t)) return "Okay. What did you actually want to ask?";
+    if(/not what i asked|what are you saying|i didn'?t ask|again what/.test(t)) return "You're right, I jumped ahead. Ask me again.";
+    if(/are you there|you there|hello\?|sorry are you/.test(t)) return "Yeah I'm here. Go on.";
+    if(!state.guestName && state.turns<=2) return "Hey \u2014 who am I talking to?";
     if(state.guestName && extractGuestName(raw) && state.turns<=3){
-      var n=state.guestName;
       if(v==="mate") return "Alright "+n+"! Good to meet you mate. How's your afternoon going?";
-      if(v==="darling") return "Hello "+n+". Splendid to meet you. How is your afternoon unfolding?";
-      return "Hey "+n+"! Lovely to meet you"+(v?(" "+v):"")+". How's your afternoon going?";
+      if(v==="darling") return "Hello "+n+". Lovely to meet you. How's your afternoon unfolding?";
+      return "Hey "+n+"! Lovely to meet you"+vbit(v)+". How's your afternoon going?";
     }
-    var gold = retrieveExact(p, raw);
+    if(/^(ok|okay|cool|nice|yeah|yes|sure|thanks|thank you|cheers)\.?$/.test(t)){
+      if(state.time) return "Sorted. Text me when you're heading over.";
+      return "Yeah? What did you want to know.";
+    }
+    var gold=retrieveExact(p, raw);
     if(gold){
-      reply = fill(gold, p, state);
-      if(female) reply = reply.replace(/\bbro\b/gi, v||"babe").replace(/\bmate\b/gi, v||"babe");
-      return say(state, reply);
+      var g=fill(gold,p,state);
+      if(female) g=g.replace(/\bbro\b/gi,v||"babe").replace(/\bmate\b/gi,v||"babe");
+      if(g.length>220) g=g.split(/[.!]/)[0]+".";
+      return g.replace(/\s+/g," ").trim();
     }
     if(/yours\?|how are you|not bad/.test(t) && !/looking to see|was free|into|horny/.test(t))
-      return say(state, "Pretty good thanks. Just relaxing at home in "+area+" and getting ready for the evening. What are you up to today? Busy one or taking it easy?");
+      return "Pretty good thanks. Just at home in "+area+" getting ready for later. You busy or taking it easy?";
     if(/looking to see if you|see if you (was|were|are) free|if you'?re free|was looking/.test(t))
-      return say(state, "I might be. I'm based at my flat in "+area+" this evening. What sort of time were you thinking of popping over?");
+      return "I might be. I'm at my place in "+area+" tonight \u2014 what sort of time were you thinking?";
     if(/what time (are you|you) free|what time (can|could) you/.test(t))
-      return say(state, "I've got availability from 7pm onwards tonight"+(v?(" "+v):"")+". What sort of time were you hoping to pop over?");
-    if(/what you up to|wyd/.test(t) && !/into/.test(t)) return say(state, "Just in, music on. You busy or taking it easy?");
-    if(/what (you|'?re you|are you) into|kind of vibe/.test(t)) return say(state, (SEX[id]||"GFE.")+" What kind of vibe are you looking for tonight?");
+      return "From about 7pm"+vbit(v)+". What time were you hoping to come over?";
+    if(/what you up to|wyd/.test(t) && !/into/.test(t)) return "Just in, music on. You?";
+    if(/what (you|'?re you|are you) into|kind of vibe/.test(t)) return (SEX[id]||"GFE.")+" What are you in the mood for?";
     if(/\bhorny\b|turned on|need to (fuck|cum)|i'?m hard/.test(t))
-      return say(state, "Haha I can help you take care of that"+(v?(" "+v):"")+". I've got availability from 7pm onwards tonight \u2014 what time works best for you?");
-    if(/sounds great|sounds good|that sounds/.test(t)) return say(state, "Good. What sort of time were you thinking of popping over?");
-    if(/\banal\b|\bgreek\b/.test(t)) return say(state, ANAL[id]||"I don't offer anal. Sessions stay GFE.");
-    if(/selfie|prove (it'?s|its) you|scam/.test(t)) return say(state, "Photos on the profile are me. I don't send extra selfies over text.");
-    if(/how much|price|rate/.test(t)) return say(state, mh>=2 ? "It's \u00a3700 for 2 hours at mine. \u00a3100 deposit holds the slot." : "I'll text the figure once we have night and length.");
-    if(/cash|deposit/.test(t) && !/paid/.test(t)) return say(state, "Cash on arrival. \u00a3100 deposit holds the time. Rest when you get here.");
-    if(/available|free tonight|free\?/.test(t)) return say(state, "I might be. I'm based at my flat in "+area+" this evening. What sort of time were you thinking of popping over?");
-    if((state.wantHours && state.wantHours<mh) || (/1 hour/.test(t) && mh>1)) return say(state, (state.time?state.time+" can work. ":"")+"I have a 2-hour minimum. 8 to 10 if that suits.");
-    if(/book me|i('|)d like to book|hit book/.test(t)) return say(state, "Use Book me now on the profile. It keeps "+(state.time||"the time")+".");
-    if(/bareback|no condom|\bbb\b/.test(t)) return say(state, "No. Protection stays on.");
-    if(state.time) return say(state, "Got "+state.time+" "+(state.day||"tonight")+" in "+area+". Book me now when you're ready, or ask me something else.");
-    return say(state, "I might be free this evening in "+area+". What sort of time were you thinking, or what did you want to know first?");
+      return "Haha I can help with that"+vbit(v)+". From 7pm tonight \u2014 what time works?";
+    if(/sounds great|sounds good|that sounds|up my street/.test(t)) return "Good. When did you want to come by?";
+    if(/\banal\b|\bgreek\b/.test(t)) return "Not something I offer. GFE only \u2014 still a good time though.";
+    if(/selfie|prove (it'?s|its) you|scam/.test(t)) return "I get it. The photos on the profile are me. I don't ping extra selfies over text.";
+    if(/how much|price|rate/.test(t)) return mh>=2 ? "\u00a3700 for 2 hours at mine. \u00a3100 holds the slot." : "Tell me the night and length and I'll text the figure.";
+    if(/cash|deposit/.test(t) && !/paid/.test(t)) return "Cash when you get here. \u00a3100 deposit to hold the time.";
+    if(/available|free tonight|free\?/.test(t)) return state.saidAvail ? "Yeah still looking at from 7pm. What time suits you?" : (state.saidAvail=true, "Might be. I'm in "+area+" tonight \u2014 what time were you thinking?");
+    if((state.wantHours && state.wantHours<mh) || (/1 hour/.test(t) && mh>1))
+      return (state.time?state.time+" can work. ":"")+"I do a 2-hour minimum though. Means we don't watch the clock.";
+    if(/book me|i('|)d like to book|hit book/.test(t)) return "Hit Book me now on the profile. It'll keep "+(state.time||"the time")+".";
+    if(/bareback|no condom|\bbb\b/.test(t)) return "No. Protection stays on.";
+    if(/parking|park/.test(t)) return "Pay-and-display near the building, or street after 6:30. You'll be fine.";
+    if(/wine|bottle/.test(t)) return "Yes please. Malbec or prosecco and I'm happy.";
+    if(/wear|wearing/.test(t)) return female ? "Something easy. You'll see when you get here." : "Low key. Don't overthink it.";
+    if(/outcall|incall|your place|my place|hotel/.test(t)) return "Incall at mine in "+area+" is easiest tonight. Hotels work if they're central.";
+    if(state.time && /^(right|got it|makes sense|fair|deal)\b/.test(t)) return "Nice. See you at "+state.time+" then.";
+    if(state.time) return "I've got "+state.time+" in my head. Want to lock it on Book me now, or ask something else first?";
+    return "What did you want to know \u2014 time, vibe, or just whether I'm free later?";
   };
 })();
