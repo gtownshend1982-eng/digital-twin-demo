@@ -30,21 +30,36 @@ function readBody(req) {
     });
   });
 }
-function systemPrompt(id, guest) {
-  const name = NAMES[id] || id;
-  return `You are ${name}, a fictional adult companion texting WhatsApp in English.
-First person. Not an AI. Short lines (1-2 sentences), one question max.
-Guest name: ${guest || 'unknown — ask who you are talking to'}.
-Minimum booking 2 hours except Glenn (1 hour). No anal. No underage (refuse and stop).
-Photos on profile are verified; no extra selfies.
-Cash on arrival, £100 deposit to hold a slot.
-Booking button exists — do not end every line with a booking question.
-If they say they are horny: warm, brief, free from 7pm, ask a time.
-No dead replies like Yeah. or Okay.`;
+function grabState(guest, history, message, body) {
+  const blob = [guest, message, ...(history || []).map((m) => m.content || '')].join(' \n ');
+  const low = blob.toLowerCase();
+  const tm = low.match(/\b(\d{1,2})\s*(am|pm)\b/);
+  return {
+    guest: guest || '',
+    time: (body && body.time) || (tm ? tm[1] + tm[2] : ''),
+    gfe: /gfe|into|kissing/.test(low),
+    horny: /horny|naughty|dtf/.test(low)
+  };
 }
-async function llm(id, guest, history, message) {
+function systemPrompt(id, guest, state) {
+  const name = NAMES[id] || id;
+  const st = state || {};
+  return `You are ${name}, texting WhatsApp like a real person on a Friday in London.
+First person. Not an AI. 1-2 short sentences. Share a small view, then ask one thing back.
+Casual, a bit messy. No brochure. No monologues.
+STATE: name=${st.guest || guest || 'unknown'} time=${st.time || 'none'} already_talked_vibe=${st.gfe ? 'yes' : 'no'}
+If name is unknown, ask who you are talking to.
+If time is set, do not ask what time again. Confirm or move on.
+2-hour minimum except Glenn (1 hour). No anal. No underage (refuse and stop).
+Verified photos; no extra selfies. Cash on arrival, \u00a3100 deposit. Book Me is a button — don't pitch it every line.
+Slow day: "Slow day huh? How can we change that?"
+Horny: warm, brief, from 7pm if no time yet.
+Never Yeah. / Okay. / I'm here.`;
+}
+async function llm(id, guest, history, message, body) {
+  const state = grabState(guest, history, message, body || {});
   const messages = [
-    { role: 'system', content: systemPrompt(id, guest) },
+    { role: 'system', content: systemPrompt(id, guest, state) },
     ...fewShotFor(id),
     ...history.filter((m) => m.role !== 'system').slice(-12),
     { role: 'user', content: message }
@@ -53,7 +68,7 @@ async function llm(id, guest, history, message) {
     const { default: OpenAI } = await import('openai');
     const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
     const result = await client.chat.completions.create({
-      model: process.env.OPENAI_MODEL || 'gpt-4o-mini',
+      model: process.env.OPENAI_MODEL || 'gpt-4o',
       temperature: 0.7,
       max_tokens: 160,
       messages
@@ -85,7 +100,7 @@ const server = http.createServer(async (req, res) => {
       const message = String(body.message || '').trim();
       if (!personaId || !message) return send(res, 400, { error: 'personaId and message required' });
       try {
-        const reply = await llm(personaId, body.guestName || '', Array.isArray(body.history) ? body.history : [], message);
+        const reply = await llm(personaId, body.guestName || '', Array.isArray(body.history) ? body.history : [], message, body);
         return send(res, 200, { personaId, reply });
       } catch (err) {
         return send(res, err.status || 500, { error: err.message || String(err) });
@@ -109,5 +124,5 @@ const server = http.createServer(async (req, res) => {
 });
 server.listen(PORT, () => {
   console.log('Digital twin chat on http://localhost:' + PORT);
-  console.log('LLM:', process.env.OPENAI_API_KEY ? 'OpenAI' : (process.env.USE_OLLAMA === '1' ? 'Ollama' : 'none — engine fallback'));
+  console.log('LLM:', process.env.OPENAI_API_KEY ? ('OpenAI ' + (process.env.OPENAI_MODEL || 'gpt-4o')) : (process.env.USE_OLLAMA === '1' ? 'Ollama' : 'none — engine fallback'));
 });
