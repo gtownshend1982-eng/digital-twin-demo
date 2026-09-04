@@ -1,29 +1,33 @@
-# Capital Companions demo
+# Capital Companions — digital twin demo
 
-I cannot see C:\\Users\\Alexis\\digital-twin-demo from here. This repo is what that folder should match after `git pull`.
+Pitch demo. Open `index.html` then a house, then a name.
 
-## Required files in that folder
+**Needs next to `profile.html`:** `profiles.js`, `chat-engine.js`, `css.css`, `photos/`.
+
+Windows (no git):
 
 ```
-C:\\Users\\Alexis\\digital-twin-demo\\
-  index.html
-  female.html
-  male.html
-  trans.html
-  profile.html
-  css.css
-  profiles.js      REQUIRED for chat
-  chat-engine.js   REQUIRED for chat
-  photos\\          optional jpgs
+cd C:\Users\Alexis
+Invoke-WebRequest -Uri "https://github.com/gtownshend1982-eng/digital-twin-demo/archive/refs/heads/main.zip" -OutFile "digital-twin-demo.zip"
+Expand-Archive -Path "digital-twin-demo.zip" -DestinationPath "C:\Users\Alexis" -Force
+Remove-Item "C:\Users\Alexis\digital-twin-demo" -Recurse -Force
+Rename-Item "C:\Users\Alexis\digital-twin-demo-main" "digital-twin-demo"
+start C:\Users\Alexis\digital-twin-demo\index.html
 ```
 
-If `profiles.js` or `chat-engine.js` is missing, profile.html is broken.
+Then Ctrl+Shift+R.
 
-## Open it
+## Behaviour (2026-09-04)
 
-1. `git pull` in that folder
-2. Double-click `female.html` (not profile.html first)
-3. Click Andreia
-4. First bubble: Hi im Andreia who am i talking with
+- First line: `Hi im {Name} who am i talking with`
+- Uses the guest’s given name
+- English only
+- Chat is conversation; booking questions only after **Book me now** or availability
+- Remembers tonight / 7pm / incall vs hotel
+- Houses: female / male / trans
+- Male + trans: “are you big” = cock size from questionnaire
+- Female + trans: breast questions use questionnaire notes
+- Escort slang clusters understood; not a service menu
+- Underage = hard stop
 
-Photos are optional. Chat does not need them.
+Calendar APIs are not wired yet. Book me now is a chat hold, not Google/Cal.com.
