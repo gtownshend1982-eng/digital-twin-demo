@@ -62,12 +62,12 @@
 (function () {
   var page = document.getElementById("page");
   function fail(msg) {
-    page.innerHTML = "<div class='err'><p><b>Chat cannot start.</b></p><p>" + msg + "</p><p>These files must sit in C:\\Users\\Alexis\\digital-twin-demo next to profile.html:</p><ul><li>profiles.js</li><li>chat-engine.js</li><li>examples-a.js</li><li>examples-b.js</li></ul></div>";
+    page.innerHTML = "<div class='err'><p><b>Chat cannot start.</b></p><p>" + msg + "</p></div>";
   }
   if (!window.PROFILES) { fail("profiles.js did not load."); return; }
   var id = (new URLSearchParams(location.search).get("id") || "ben").toLowerCase();
   var p = window.PROFILES[id];
-  if (!p) { fail("Unknown persona: " + id + ". Use profile.html?id=ben"); return; }
+  if (!p) { fail("Unknown persona: " + id); return; }
   if (!window.twinReply) { fail("chat-engine.js did not load."); return; }
   document.title = p.name;
   document.getElementById("back").href = p.wing === "female" ? "female.html" : p.wing === "male" ? "male.html" : "trans.html";
@@ -80,6 +80,8 @@
   document.getElementById("facts").textContent = p.city || "";
   var thread = document.getElementById("thread");
   var state = { turns: 0, guestName: "" };
+  var history = [];
+  var API = (location.protocol === "http:" || location.protocol === "https:") ? "/api/chat" : "http://127.0.0.1:3000/api/chat";
   function add(text, who) {
     if (!text) return;
     var row = document.createElement("div");
@@ -95,7 +97,28 @@
   function send(text) {
     add(text, "me");
     if (window.twinCaptureName) window.twinCaptureName(text, state);
-    add(window.twinReply(p, text, state), "them");
+    history.push({ role: "user", content: text });
+    var used = false;
+    var timer = setTimeout(function () {
+      if (used) return;
+      used = true;
+      var fallback = window.twinReply(p, text, state);
+      history.push({ role: "assistant", content: fallback });
+      add(fallback, "them");
+    }, 4000);
+    fetch(API, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ personaId: p.id, message: text, guestName: state.guestName || "", history: history.slice(-12) })
+    }).then(function (r) { return r.json(); }).then(function (j) {
+      if (used) return;
+      if (j && j.reply) {
+        used = true;
+        clearTimeout(timer);
+        history.push({ role: "assistant", content: j.reply });
+        add(j.reply, "them");
+      }
+    }).catch(function () {});
   }
   document.getElementById("form").onsubmit = function (e) {
     e.preventDefault();
