@@ -6,11 +6,15 @@
   var SEX = {ben:"GFE, kissing, unhurried.",glenn:"Girlfriend energy with women.",travis:"Kissing, oral.",luke:"GFE or more physical.",jeremy:"Dinner, hotel, slow.",andreia:"Soft GFE — kissing, cuddling.",tanita:"Hotel GFE, dinner.",caroline:"Straightforward session.",faye:"Dominance, protocol.",joselyn:"Soft D/s, aftercare.",alexis:"GFE, kissing, I can lead.",marianna:"Playful GFE.",nicole:"Sweet GFE.",sophie:"Massage into sex.",duda:"Dinner, hotel, kissing."};
   function pick(a){return a[Math.floor(Math.random()*a.length)];}
   function norm(s){return String(s||"").toLowerCase().replace(/[’']/g,"'").trim();}
-  var STOP=/^(hi|hey|hello|yo|yes|yeah|ok|okay|cool|im|i'm|me|you|who|what|when|how|free|tonight|today|book|hotel|love|baby|babe|hun|mate)$/i;
+  var STOP=/^(hi|hey|hello|yo|yes|yeah|yeh|yep|ok|okay|cool|nice|im|i'm|me|you|who|what|when|how|free|tonight|today|book|hotel|love|baby|babe|hun|mate|here)$/i;
   function titleName(s){return String(s||"").replace(/[^\p{L}\p{N}'-]+/gu,"").replace(/^\w/,function(c){return c.toUpperCase();});}
   function extractGuestName(raw){
-    var m=String(raw||"").trim().match(/(?:i(?:['’]?m| am)|this is|call me)\s+([A-Za-z][A-Za-z'\-]{1,20})/i);
+    var text=String(raw||"").trim();
+    if(!text) return "";
+    var m=text.match(/(?:i(?:['’]?m| am)|this is|call me|name(?:'s| is))\s+([A-Za-z][A-Za-z'\-]{1,20})/i);
     if(m&&m[1]&&!STOP.test(m[1])) return titleName(m[1]);
+    var words=text.replace(/[^A-Za-z'\- ]/g," ").trim().split(/\s+/);
+    if(words.length===1 && words[0].length>=2 && words[0].length<=20 && !STOP.test(words[0])) return titleName(words[0]);
     return "";
   }
   function grabSlots(raw,state){
@@ -70,13 +74,6 @@
       return "This chat is for meeting in person. I'm not selling clips here.";
     if(/rizz|thirst|glow up|down bad|gyatt|smash or pass|horny|randy|wet|blue balls|morning wood|afterglow|pnc|freak/.test(t))
       return "Cute. If you want to meet, Book me now. If you want to talk, talk.";
-    if(/\uD83C\uDF51|\uD83C\uDF46|\uD83C\uDF4C/.test(t) || /eggplant|banana emoji/.test(t)){
-      if(wing==="female") return "That's a male or trans question.";
-      var s=SIZE[id];
-      return s && s.cat==="large" ? "Yeah, on the bigger side." : "I do alright.";
-    }
-    if(/\uD83C\uDF51|peach|cake emoji|gyatt|\uD83E\uDD70/.test(t) && /ass|bum|butt|peach/.test(t)) return id==="marianna"||id==="andreia" ? "That's rather the point." : "You'll see.";
-    if(/\uD83C\uDF4E|\uD83C\uDF48|boobs?|tits|melons/.test(t) && wing!=="male") return BUST[id]||"Natural.";
     return "";
   }
   window.twinOpening=function(p){return "Hi im "+((p&&p.name)||"me")+" who am i talking with";};
@@ -94,6 +91,7 @@
     var wing=WING[id]||"";
     if(/underage|teen|schoolgirl/.test(t)) return "No. Adult bookings only. That's the end of this chat.";
     if(!state.guestName && state.turns<=2) return "Nice to meet you. What should I call you?";
+    if(state.guestName && state.turns<=3 && extractGuestName(raw)) return say(state,"Hey. Nice to meet you.");
     if(/^(hi|hey|hello|hiya)\b/.test(t) && state.guestName && state.turns<=3) return say(state,"Hey. Nice to meet you.");
     if(/i('|)d like to book|book me now|want to book/.test(t)) return say(state,"Cute. Let's lock it in.", true);
     var sl=slang(t,id,wing);
