@@ -4,11 +4,11 @@
   var VOICE = {ben:"mate",travis:"mate",luke:"mate",glenn:"mate",jeremy:"",andreia:"love",tanita:"babe",caroline:"darling",faye:"babe",joselyn:"babe",alexis:"babe",marianna:"babe",nicole:"babe",sophie:"babe",duda:"amor"};
   var SEX = {nicole:"Super fun passionate GFE — kissing, affection, no rush.",tanita:"Proper passionate GFE. Kissing, unhurried.",andreia:"Affectionate GFE. Kissing and chemistry.",ben:"Full GFE. Kissing, physical, no clock-watching.",travis:"Relaxed GFE. Kissing, chemistry, no pressure.",luke:"Warm GFE. Chemistry first.",jeremy:"Refined GFE. Unhurried.",caroline:"Luxurious GFE. Kissing, no rush.",faye:"Passionate GFE.",joselyn:"Fiery GFE. Kissing and cuddles.",alexis:"Glam GFE.",marianna:"Playful GFE.",sophie:"Massage into GFE.",duda:"Passionate GFE.",glenn:"Girlfriend energy."};
   var SIZE = {marianna:"About 7.5 and thick.",nicole:"About 7 and thick.",alexis:"About 8.",sophie:"About 7.",duda:"About 7.5.",ben:"About 7.5.",travis:"About 8.",luke:"About 7.",glenn:"About 7.",jeremy:"I don't do locker-room numbers."};
-  var LEX = {lazy:"taking it easy",laidback:"taking it easy","laid back":"taking it easy",chilled:"taking it easy",chilling:"taking it easy",relaxed:"taking it easy",knackered:"tired",shattered:"tired",wrecked:"tired",horny:"horny",naughty:"naughty",filthy:"naughty",dirty:"naughty",dtf:"horny","down to fuck":"horny",free:"are you free",available:"are you free",rates:"how much",price:"how much",cost:"how much",pics:"selfie",selfie:"selfie",photo:"selfie",bb:"bareback",bareback:"bareback",greek:"anal",anal:"anal"};
+  var LEX = {lazy:"taking it easy",slow:"taking it easy",quiet:"taking it easy",laidback:"taking it easy","laid back":"taking it easy",chilled:"taking it easy",chilling:"taking it easy",relaxed:"taking it easy",knackered:"tired",shattered:"tired",wrecked:"tired",horny:"horny",naughty:"naughty",filthy:"naughty",dirty:"naughty",dtf:"horny","down to fuck":"horny",free:"are you free",available:"are you free",rates:"how much",price:"how much",cost:"how much",pics:"selfie",selfie:"selfie",photo:"selfie",bb:"bareback",bareback:"bareback",greek:"anal",anal:"anal"};
   function applyLex(t){ var out=" "+t+" "; var k; for (k in LEX){ out=out.replace(new RegExp("\\b"+k.replace(/[.*+?^${}()|[\]\\]/g,"\\$&")+"\\b","g"), " "+LEX[k]+" "); } return out.replace(/\s+/g," ").trim(); }
   function norm(s){return String(s||"").toLowerCase().replace(/['\u2019]/g,"'").replace(/\s+/g," ").trim();}
   function titleName(s){return String(s||"").replace(/[^\p{L}\p{N}'-]+/gu,"").replace(/^\w/,function(c){return c.toUpperCase();});}
-  var STOP=/^(hi|hey|hello|yo|yes|yeah|ok|okay|cool|im|i'm|me|you|who|what|when|how|free|tonight|today|book|hotel|love|baby|babe|hun|mate|bro|here|sorry|the|and|for|with|that|this|not|bad|horny|naughty|lazy)$/i;
+  var STOP=/^(hi|hey|hello|yo|yes|yeah|ok|okay|cool|im|i'm|me|you|who|what|when|how|free|tonight|today|book|hotel|love|baby|babe|hun|mate|bro|here|sorry|the|and|for|with|that|this|not|bad|horny|naughty|lazy|slow|quiet)$/i;
   function extractGuestName(raw){
     var text=String(raw||"").trim();
     var m=text.match(/(?:i(?:['\u2019]?m| am)|this is|it'?s|call me)\s+([A-Za-z][A-Za-z'\-]{1,20})/i);
@@ -46,6 +46,8 @@
   window.twinCaptureName=function(raw,state){ if(!state.guestName){var n=extractGuestName(raw);if(n) state.guestName=n;} return state.guestName||""; };
   window.twinReply=function(p,raw,state){
     var t=applyLex(norm(raw));
+    if(state.lastU===t) return "I hear you. Want to come by later, or ask something else?";
+    state.lastU=t;
     state.turns=(state.turns||0)+1;
     window.twinCaptureName(raw,state);
     grabSlots(raw,state);
@@ -61,7 +63,8 @@
     if(/not what i asked|what are you saying|i didn'?t ask|again what/.test(t)) return "You're right, I jumped ahead. Ask me again.";
     if(/are you there|you there|hello\?|sorry are you/.test(t)) return "Yeah I'm here. Go on.";
     if(!state.guestName && state.turns<=2) return "Hey \u2014 who am I talking to?";
-    if(state.guestName && extractGuestName(raw) && state.turns<=3){
+    if(state.guestName && !state.greeted){
+      state.greeted=true;
       if(v==="mate") return "Alright "+n+"! Good to meet you mate. How's your afternoon going?";
       if(v==="darling") return "Hello "+n+". Lovely to meet you. How's your afternoon unfolding?";
       return "Hey "+n+"! Lovely to meet you"+vbit(v)+". How's your afternoon going?";
