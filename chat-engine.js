@@ -92,6 +92,11 @@
       saveLearn(id, raw, reply);
       return reply;
     }
+    if(/how are you|afternoon going|not bad thanks|what you up to|wyd/.test(t) && !/available|free|book|hour|into/.test(t)){
+      reply = say(state, "Pretty good thanks. Just relaxing this afternoon and getting ready for the evening. What are you up to today? Busy one or taking it easy?");
+      saveLearn(id, raw, reply);
+      return reply;
+    }
     var learned = retrieve(p, raw, state);
     if(learned){ reply=say(state, learned); saveLearn(id, raw, reply); return reply; }
     if(/new to this|first time|nervous|hesitant|anxious|awkward/.test(t))
