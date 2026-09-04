@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Profile</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600&family=Plus+Jakarta+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css.css">
+<style>
+.page { max-width: 980px; margin: 0 auto; padding: 24px 16px 40px; position: relative; z-index: 1; }
+.top { display:flex; gap:22px; align-items:flex-start; flex-wrap:wrap; margin-bottom:22px; }
+.top img { width:min(280px,100%); aspect-ratio:3/4; object-fit:cover; border-radius:16px; border:1px solid var(--line); }
+.bio h1 { font-family:"Cormorant Garamond",serif; font-size:2.4rem; }
+.bio .sub { color:var(--gold); letter-spacing:.08em; text-transform:uppercase; font-size:.75rem; margin:6px 0 12px; }
+.bio p { color:#e5e7eb; line-height:1.55; max-width:36rem; }
+.facts { margin-top:14px; color:var(--muted); font-size:.9rem; line-height:1.6; }
+.wa {
+  max-width: 520px; margin: 8px 0 0;
+  background:#0b141a; border:1px solid var(--line); border-radius:16px; overflow:hidden;
+  display:flex; flex-direction:column; min-height:520px; box-shadow:0 20px 50px rgba(0,0,0,.35);
+}
+.wa-head { background:#202c33; display:flex; align-items:center; gap:10px; padding:10px 12px; }
+.wa-head img { width:40px; height:40px; border-radius:50%; object-fit:cover; }
+.wa-head .nm { font-weight:600; font-size:.95rem; }
+.wa-head .st { font-size:.72rem; color:#8696a0; }
+.wa-thread {
+  flex:1; padding:14px 12px 8px; overflow-y:auto; max-height:360px;
+  background:#0b141a;
+}
+.row { display:flex; margin:6px 0; }
+.row.me { justify-content:flex-end; }
+.bubble { max-width:78%; padding:8px 10px; border-radius:10px; font-size:.9rem; line-height:1.4; white-space:pre-wrap; }
+.row.them .bubble { background:#202c33; color:#e9edef; border-top-left-radius:3px; }
+.row.me .bubble { background:#005c4b; color:#e9edef; border-top-right-radius:3px; }
+.wa-form { display:flex; gap:8px; padding:10px; background:#202c33; }
+.wa-form input { flex:1; border:0; border-radius:20px; padding:10px 14px; background:#2a3942; color:#fff; font:inherit; }
+.wa-form button { border:0; border-radius:20px; padding:10px 16px; background:#00a884; color:#042; font-weight:700; cursor:pointer; }
+</style>
+</head>
+<body>
+<div class="page">
+  <a class="back" id="back" href="index.html">← Back</a>
+  <div class="top">
+    <img id="photo" alt="">
+    <div class="bio">
+      <h1 id="name"></h1>
+      <div class="sub" id="sub"></div>
+      <p id="about"></p>
+      <p id="greet" style="margin-top:10px;color:#d1d5db"></p>
+      <div class="facts" id="facts"></div>
+    </div>
+  </div>
+  <div class="wa">
+    <div class="wa-head">
+      <img id="ava" alt="">
+      <div>
+        <div class="nm" id="waname"></div>
+        <div class="st">online · demo chat</div>
+      </div>
+    </div>
+    <div class="wa-thread" id="thread"></div>
+    <form class="wa-form" id="form">
+      <input id="msg" autocomplete="off" placeholder="Message…" />
+      <button type="submit">Send</button>
+    </form>
+  </div>
+</div>
+<script src="profiles.js?v=5"></script>
+<script src="chat-engine.js?v=5"></script>
+<script>
+(function initChat() {
+  const id = (new URLSearchParams(location.search).get("id") || "").toLowerCase();
+  const p = (window.PROFILES || {})[id];
+  if (!p) {
+    document.querySelector(".page").innerHTML = "<p style='padding:40px'>Profile not found. <a class='back' href='index.html'>Home</a></p>";
+    return;
+  }
+  document.title = p.name + " — Capital Companions";
+  const wingPage = p.wing === "female" ? "female.html" : p.wing === "male" ? "male.html" : "trans.html";
+  document.getElementById("back").href = wingPage;
+  document.getElementById("photo").src = p.photo;
+  document.getElementById("photo").alt = p.name;
+  document.getElementById("ava").src = p.photo;
+  document.getElementById("name").textContent = p.name;
+  document.getElementById("waname").textContent = p.name;
+  document.getElementById("sub").textContent = p.brief + " · " + p.age;
+  document.getElementById("about").textContent = p.about;
+  document.getElementById("greet").textContent = "";
+  document.getElementById("facts").innerHTML =
+    [p.height, p.body, p.nationality, p.city].filter(Boolean).join(" · ");
+  const thread = document.getElementById("thread");
+  const state = { turns: 0, nudged: false, askedBook: 0, guestName: "" };
+  function add(text, who) {
+    if (!text) return;
+    const row = document.createElement("div");
+    row.className = "row " + who;
+    const b = document.createElement("div");
+    b.className = "bubble";
+    b.textContent = text;
+    row.appendChild(b);
+    thread.appendChild(row);
+    thread.scrollTop = thread.scrollHeight;
+  }
+  const history = [];
+  thread.innerHTML = "";
+  const opening = (typeof window.twinOpening === "function")
+    ? window.twinOpening(p)
+    : ("Hi im " + p.name + " who am i talking with");
+  add(opening, "them");
+  history.push({ role: "assistant", content: opening });
+  function localAnswer(text) {
+    if (typeof window.twinReply === "function") return window.twinReply(p, text, state);
+    return "Yeah I'm good. You?";
+  }
+  async function answer(text) {
+    try {
+      const res = await fetch("/api/chat", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          personaId: p.id,
+          message: text,
+          history: history.slice(-16),
+          guestName: state.guestName || ""
+        })
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.reply) return data.reply;
+      }
+    } catch (_) {}
+    return localAnswer(text);
+  }
+  document.getElementById("form").onsubmit = async function (e) {
+    e.preventDefault();
+    const input = document.getElementById("msg");
+    const text = input.value.trim();
+    if (!text) return;
+    add(text, "me");
+    input.value = "";
+    if (typeof window.twinCaptureName === "function") window.twinCaptureName(text, state);
+    history.push({ role: "user", content: text });
+    const reply = await answer(text);
+    history.push({ role: "assistant", content: reply });
+    add(reply, "them");
+  };
+})();
+</script>
+</body>
+</html>
