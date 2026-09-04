@@ -1,4 +1,4 @@
-/* Pitch chat — min from questionnaire; anal from q40/q42 */
+/* Pitch chat — no dead Yeah/Okay; slots + small talk */
 (function () {
   var WING = {andreia:"female",tanita:"female",caroline:"female",faye:"female",joselyn:"female",ben:"male",glenn:"male",travis:"male",luke:"male",jeremy:"male",alexis:"trans",marianna:"trans",nicole:"trans",sophie:"trans",duda:"trans"};
   var AREA = {andreia:"my place in Kensington",tanita:"central — Marylebone / Mayfair",caroline:"Zone 3 incall",faye:"a private incall, Zone 2",joselyn:"Zone 2 North",ben:"South London, easy into town",glenn:"East / Essex fringe",travis:"Vauxhall",luke:"North / Camden side",jeremy:"Kensington / Chelsea",alexis:"East / Canary",marianna:"Zone 2 West",nicole:"Zone 2/3 West",sophie:"Zone 1/2 West",duda:"Chelsea / Marylebone"};
@@ -43,17 +43,24 @@
   function minLabel(h){ return h>=2?"2-hour minimum":(h<1?"45-minute incall minimum":"1-hour minimum"); }
   function grabSlots(raw,state){
     var t=norm(raw);
-    if(/\btonight\b|\btoday\b/.test(t)) state.day="tonight";
+    if(/\btonight\b|\btoday\b|this evening/.test(t)) state.day="tonight";
     if(/\btomorrow\b/.test(t)) state.day="tomorrow";
     var d=t.match(/\b(monday|tuesday|wednesday|thursday|friday|saturday|sunday)\b/);
     if(d) state.day=d[1];
-    var tm=t.match(/\b(\d{1,2})(?::(\d{2}))?\s*(am|pm)\b/)||t.match(/\b(\d{1,2})\s*(am|pm)\b/);
-    if(tm) state.time=tm[0].replace(/\s+/g,"");
+    var tm=t.match(/\b(\d{1,2})(?::(\d{2}))?\s*(am|pm)\b/i)||t.match(/\b(\d{1,2})(am|pm)\b/i);
+    if(tm) { state.time=(tm[1]+(tm[2]&&tm[2].length<=2&&/\d/.test(tm[2])?(":"+tm[2]):"")+(tm[tm.length-1]||"")).replace(/\s+/g,""); if(!state.day) state.day="tonight"; }
     if(/\bincall\b|your place|at yours|at mine/.test(t)) state.where="incall";
     if(/\boutcall\b|hotel|my place/.test(t)) state.where="hotel";
-    if(/\b1 hour\b|one hour|an hour/.test(t)) state.wantHours=1;
+    if(/\b1 hour\b|one hour|an hour|maybe 1 hour/.test(t)) state.wantHours=1;
     if(/\b2 hour/.test(t)) state.wantHours=2;
     if(/30 min|half an hour|45 min/.test(t)) state.wantHours=0.5;
+  }
+  function slotLine(state,area,label){
+    var bits=[];
+    if(state.time) bits.push(state.time);
+    bits.push(state.day||"tonight");
+    if(state.wantHours) bits.push(state.wantHours>=2?"2 hours":"1 hour");
+    return "Got you — "+bits.join(" ")+" at "+area+". "+label+". Use Book me now if you want it held.";
   }
   function say(state,text){
     var n=state.guestName;
@@ -78,22 +85,28 @@
     var label=minLabel(mh);
     if(/underage|teen|schoolgirl/.test(t)) return "No. Adult bookings only. That's the end of this chat.";
     if(!state.guestName && state.turns<=2) return "Nice to meet you. What should I call you?";
-    if(state.guestName && state.turns<=3 && extractGuestName(raw)) return say(state,"Hey. Nice to meet you.");
-    if(/^(hi|hey|hello|hiya)\b/.test(t) && state.guestName && state.turns<=3) return say(state,"Hey. Nice to meet you.");
+    if(state.guestName && state.turns<=3 && extractGuestName(raw) && !/available|free|book|hour|pm/.test(t)) return say(state,"Hey. Nice to meet you.");
+
+    if(/not real|leaving|makes no sense|just saying ok|yeah what|okay what|ok what/.test(t))
+      return say(state, state.time ? slotLine(state,area,label) : "I'm here. Quiet evening in. What time were you thinking?");
+    if(/what (you|'?re you|are you) up to|what you doing|wyd/.test(t))
+      return say(state,"Just in, phones and a bit of telly. You?");
+    if(/how are you|how's it going|whats up|what's up|not bad/.test(t))
+      return say(state,"Yeah not bad. Quiet afternoon. You?");
     if(/\banal\b|\bgreek\b/.test(t)) return say(state, ANAL[id] || "Not something I list.");
-    if(/selfie|prove (it'?s|its) you|video call first|custom photo/.test(t))
-      return say(state,"I get why you're cautious, but the photos on the profile are me. I don't send extra selfies over chat. Better in person.");
+    if(/selfie|prove (it'?s|its) you/.test(t))
+      return say(state,"Photos on the profile are me. I don't send extra selfies over chat.");
     if(/how much|\u00a3|price|rate|cost/.test(t))
-      return say(state,"Send the night and length and I'll text the figure. "+label+".");
-    if(/cash|deposit|how do we (pay|sort)|how do i book|how do we sort the booking/.test(t))
-      return say(state,"Cash on arrival is fine. A deposit holds the slot. Address after that. Easiest is Book me now.");
+      return say(state, (state.time?"For "+state.time+" "+(state.day||"tonight")+": I'll text the figure. ":"Send the night and length and I'll text the figure. ")+label+".");
+    if(/cash|deposit|how do we (pay|sort)|how do i book/.test(t))
+      return say(state,"Cash on arrival. A deposit holds the slot. Book me now is the easy way.");
     if(/i('|)d like to book|book me now|want to book/.test(t))
-      return say(state,"Use Book me now on the profile.");
+      return say(state, state.time ? slotLine(state,area,label) : "Use Book me now on the profile. What time?");
     if((state.wantHours!=null && state.wantHours<mh) || (/30 min|half an hour/.test(t) && mh>=1))
-      return say(state, (state.time?state.time+" works nicely, but ":"")+"I have a "+label+". I like us to take our time without watching the clock.");
-    if(/available|free/.test(t) || (/tonight/.test(t) && !state.time))
+      return say(state, (state.time?state.time+" works, but ":"")+"I have a "+label+". Better if we aren't watching the clock.");
+    if(/available|free/.test(t))
       return say(state,"Might be. I'm based at "+area+" this evening. What time were you thinking?");
-    if(/\bbb\b|bareback|no condom|owo|bbbj|\bcim\b|atm\b/.test(t)) return say(state,"No. Protection stays on.");
+    if(/\bbb\b|bareback|no condom|owo|bbbj|\bcim\b/.test(t)) return say(state,"No. Protection stays on.");
     if(/\bgfe\b|girlfriend experience/.test(t)) return say(state,"Yes — GFE is how I like it.");
     if(/are you big|you hung|cock size|how many inches/.test(t)){
       if(wing==="female") return say(state,"That's a male or trans question.");
@@ -102,8 +115,8 @@
     }
     if(/boobs?|tits|breast|bust/.test(t)) return say(state, wing==="male"?"That's a female or trans question.":(BUST[id]||"Natural."));
     if(/what (are you|r you) into|sexually|in bed|kinks?/.test(t)) return say(state,(SEX[id]||"GFE.")+" What are you in the mood for?");
-    if(/how are you|how's it going|whats up|what's up|not bad/.test(t)) return say(state,pick(["Yeah not bad. You?","Yeah I'm good. Quiet afternoon."]));
-    if(state.time&&state.day) return say(state,"I can look at "+state.time+" "+state.day+" at "+area+".");
-    return say(state,pick(["Okay.","Yeah."]));
+    if(state.time) return say(state, slotLine(state,area,label));
+    if(/^(yeah|yes|yep|ok|okay|cool)\b/.test(t)) return say(state,"What time were you thinking? I'm at "+area+" this evening.");
+    return say(state,"I'm around. What time were you thinking, or do you want to talk first?");
   };
 })();
