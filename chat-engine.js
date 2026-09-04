@@ -17,7 +17,7 @@
   function parseMinHours(p){ return /2 hour/i.test(String((p&&p.minDuration)||"2 hours"))?2:1; }
   function grabSlots(raw,state){
     var t=norm(raw);
-    if(/tonight|today|this evening/.test(t)) state.day="tonight";
+    if(/tonight|today|this evening|later/.test(t)) state.day="tonight";
     var tm=t.match(/\b(\d{1,2})\s*(am|pm)\b/i)||t.match(/around\s+(\d{1,2})/i);
     if(tm){ state.time=tm[1]+((tm[2]&&/am|pm/i.test(String(tm[2])))?tm[2]:"pm"); if(!state.day) state.day="tonight"; }
     if(/1 hour|one hour/.test(t)) state.wantHours=1;
@@ -74,7 +74,7 @@
       if(g.length>220) g=g.split(/[.!]/)[0]+".";
       return g.replace(/\s+/g," ").trim();
     }
-    if(/yours\?|how are you|not bad/.test(t) && !/looking to see|was free|into|horny/.test(t))
+    if(/yours\?|how are you|not bad|it'?s ok|its ok/.test(t) && !/looking to see|was free|into|horny/.test(t))
       return "Pretty good thanks. Just at home in "+area+" getting ready for later. You busy or taking it easy?";
     if(/looking to see if you|see if you (was|were|are) free|if you'?re free|was looking/.test(t))
       return "I might be. I'm at my place in "+area+" tonight \u2014 what sort of time were you thinking?";
@@ -89,7 +89,8 @@
     if(/selfie|prove (it'?s|its) you|scam/.test(t)) return "I get it. The photos on the profile are me. I don't ping extra selfies over text.";
     if(/how much|price|rate/.test(t)) return mh>=2 ? "\u00a3700 for 2 hours at mine. \u00a3100 holds the slot." : "Tell me the night and length and I'll text the figure.";
     if(/cash|deposit/.test(t) && !/paid/.test(t)) return "Cash when you get here. \u00a3100 deposit to hold the time.";
-    if(/available|free tonight|free\?/.test(t)) return state.saidAvail ? "Yeah still looking at from 7pm. What time suits you?" : (state.saidAvail=true, "Might be. I'm in "+area+" tonight \u2014 what time were you thinking?");
+    if(/available|free tonight|free later|you free|are you free|free\?/.test(t))
+      return state.saidAvail ? "Yeah still looking at from 7pm. What time suits you?" : (state.saidAvail=true, "Might be. I'm in "+area+" tonight \u2014 what time were you thinking?");
     if((state.wantHours && state.wantHours<mh) || (/1 hour/.test(t) && mh>1))
       return (state.time?state.time+" can work. ":"")+"I do a 2-hour minimum though. Means we don't watch the clock.";
     if(/book me|i('|)d like to book|hit book/.test(t)) return "Hit Book me now on the profile. It'll keep "+(state.time||"the time")+".";
