@@ -64,8 +64,9 @@
     <button type="button" id="booknow" class="book-now">Book me now</button>
   </div>
 </div>
-<script src="profiles.js?v=20260904b"></script>
-<script src="chat-engine.js?v=20260904b"></script>
+<script src="profiles.js?v=20260904c"></script>
+<script src="examples.js"></script>
+<script src="chat-engine.js?v=20260904c"></script>
 <script>
 (function () {
   var id = (new URLSearchParams(location.search).get("id") || "").toLowerCase();
@@ -88,7 +89,6 @@
   document.getElementById("facts").textContent = [p.city].filter(Boolean).join(" · ");
   var thread = document.getElementById("thread");
   var state = { turns: 0, guestName: "" };
-  var history = [];
   function add(text, who) {
     if (!text) return;
     var row = document.createElement("div");
@@ -102,13 +102,10 @@
   }
   var opening = window.twinOpening ? window.twinOpening(p) : ("Hi im " + p.name + " who am i talking with");
   add(opening, "them");
-  history.push({ role: "assistant", content: opening });
-  async function send(text) {
+  function send(text) {
     add(text, "me");
     if (window.twinCaptureName) window.twinCaptureName(text, state);
-    history.push({ role: "user", content: text });
     var reply = window.twinReply ? window.twinReply(p, text, state) : "Yeah.";
-    history.push({ role: "assistant", content: reply });
     add(reply, "them");
   }
   document.getElementById("form").onsubmit = function (e) {
